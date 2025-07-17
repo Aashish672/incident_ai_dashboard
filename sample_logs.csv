@@ -1,0 +1,6 @@
+timestamp,log_level,source,message
+2025-07-15 12:30:00,ERROR,server-1,Database connection failed
+2025-07-15 12:45:00,INFO,api-gateway,User login successful
+2025-07-15 13:00:00,WARNING,db,Memory usage exceeded threshold
+2025-07-15 13:15:00,DEBUG,auth-service,Cache miss for user ID 42
+2025-07-15 13:30:00,CRITICAL,server-2,Disk space critically low
