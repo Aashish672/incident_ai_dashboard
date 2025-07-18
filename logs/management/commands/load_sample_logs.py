@@ -6,7 +6,7 @@ class Command(BaseCommand):
     help="Load sample log entries into the database"
      
     def handle(self,*args,**kwargs):
-        log_levels=['INFO','WARNING','ERROR','DEBUG','CRITICAL']
+        levels=['INFO','WARNING','ERROR','DEBUG','CRITICAL']
         sources=['server-1','server-2','auth-service','db','api-gateway']
         messages=[
             "User login successful.",
@@ -24,7 +24,7 @@ class Command(BaseCommand):
         for _ in range(50):
             log=LogEntry(
                 timestamp=timezone.now(),
-                log_level=random.choice(log_levels),
+                level=random.choice(levels),
                 source=random.choice(sources),
                 message=random.choice(messages),
                 is_anomaly=random.choice([False,False,False,True])

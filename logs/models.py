@@ -11,10 +11,10 @@ LOG_LEVEL_CHOICES=[
 
 class LogEntry(models.Model):
     timestamp=models.DateTimeField()
-    log_level=models.CharField(max_length=10,choices=LOG_LEVEL_CHOICES)
+    level=models.CharField(max_length=10,choices=LOG_LEVEL_CHOICES)
     message=models.TextField()
     source=models.CharField(max_length=255,blank=True,null=True)
     is_anomaly=models.BooleanField(default=False)
      
     def __str__(self):
-        return f"[{self.timestamp}]{self.log_level}-{self.message[:50]}"
+        return f"[{self.timestamp}]{self.level}-{self.message[:50]}"

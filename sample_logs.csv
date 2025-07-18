@@ -1,4 +1,4 @@
-timestamp,log_level,source,message
+timestamp,level,source,message
 2025-07-15 12:30:00,ERROR,server-1,Database connection failed
 2025-07-15 12:45:00,INFO,api-gateway,User login successful
 2025-07-15 13:00:00,WARNING,db,Memory usage exceeded threshold

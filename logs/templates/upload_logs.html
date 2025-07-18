@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-4xl mx-auto p-6">
+    <h1 class="text-2xl font-bold mb-4">Upload Log File (CSV)</h1>
+    <form method="post" enctype="multipart/form-data" class="mb-6">
+        {% csrf_token %}
+        {{ form.file }}
+        <button class="bg-blue-600 text-white px-4 py-2 rounded ml-2">Upload</button>
+    </form>
+
+    {% if anomalies %}
+        <h2 class="text-red-600 font-semibold">Detected {{ anomalies|length }} Anomalies</h2>
+    {% endif %}
+
+    {% if logs %}
+        <h2 class="text-xl font-semibold mt-6 mb-2">Parsed Log Entries</h2>
+        <table class="w-full text-sm table-auto border border-gray-300">
+            <thead>
+                <tr class="bg-gray-100">
+                    <th class="border px-2 py-1">Timestamp</th>
+                    <th class="border px-2 py-1">Level</th>
+                    <th class="border px-2 py-1">Message</th>
+                    <th class="border px-2 py-1">Source</th>
+                    <th class="border px-2 py-1">Anomaly?</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                <tr class="{% if log.is_anomaly %}bg-red-50{% endif %}">
+                    <td class="border px-2 py-1">{{ log.timestamp }}</td>
+                    <td class="border px-2 py-1">{{ log.level }}</td>
+                    <td class="border px-2 py-1">{{ log.message }}</td>
+                    <td class="border px-2 py-1">{{ log.source }}</td>
+                    <td class="border px-2 py-1 text-center">
+                        {% if log.is_anomaly %}⚠️{% else %}✔️{% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+</div>
+{% endblock %}
