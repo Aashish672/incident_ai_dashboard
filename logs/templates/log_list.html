@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Log Entries</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Tailwind CSS CDN (or use your build pipeline) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+    <div class="max-w-6xl mx-auto py-8 px-4">
+        <h1 class="text-3xl font-bold mb-8 text-blue-700">Log Entries</h1>
+        
+        <!-- Filter Form -->
+        <form method="get" class="grid grid-cols-1 md:grid-cols-6 gap-4 mb-6 bg-white p-4 rounded-lg shadow">
+            <!-- Level Dropdown -->
+            <select name="level" class="p-2 border border-gray-300 rounded-lg">
+                <option value="">All Levels</option>
+                <option value="INFO" {% if level == 'INFO' %}selected{% endif %}>INFO</option>
+                <option value="WARNING" {% if level == 'WARNING' %}selected{% endif %}>WARNING</option>
+                <option value="ERROR" {% if level == 'ERROR' %}selected{% endif %}>ERROR</option>
+            </select>
+
+            <!-- Anomaly Checkbox -->
+            <label class="flex items-center space-x-2 col-span-1">
+                <input type="checkbox" name="anomaly" value="true" class="form-checkbox text-red-500" {% if anomaly %}checked{% endif %}>
+                <span class="text-gray-700">Anomalies Only</span>
+            </label>
+
+            <!-- Date Range -->
+            <input type="date" name="start" value="{{ start }}" class="p-2 border border-gray-300 rounded-lg" />
+            <input type="date" name="end" value="{{ end }}" class="p-2 border border-gray-300 rounded-lg" />
+
+            <!-- Search Field -->
+            <input type="text" name="search" value="{{ search }}" placeholder="Search message or source" class="p-2 border border-gray-300 rounded-lg col-span-1 md:col-span-2" />
+
+            <!-- Submit Button -->
+            <button type="submit" class="p-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition duration-200">
+                Apply Filters
+            </button>
+        </form>
+
+        <!-- Export Button -->
+        <form method="get" action="{% url 'export_logs_csv' %}" class="mb-4">
+            <input type="hidden" name="level" value="{{ request.GET.level }}">
+            <input type="hidden" name="anomaly" value="{{ request.GET.anomaly }}">
+            <input type="hidden" name="start" value="{{ request.GET.start }}">
+            <input type="hidden" name="end" value="{{ request.GET.end }}">
+            <button type="submit" class="mt-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">Export Filtered Logs as CSV</button>
+        </form>
+
+        <hr class="my-6">
+
+        <!-- Log Table -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+  {% for log in page_obj %}
+    <div class="bg-white shadow-md rounded-2xl p-4 border-l-4
+                {% if log.level == 'ERROR' %}
+                  border-red-500
+                {% elif log.level == 'WARNING' %}
+                  border-yellow-400
+                {% elif log.level == 'INFO' %}
+                  border-blue-400
+                {% else %}
+                  border-gray-300
+                {% endif %}">
+
+      <!-- Log Level & Timestamp -->
+      <div class="flex justify-between items-center mb-2">
+        <span class="text-sm font-semibold uppercase text-gray-600">
+          {{ log.level }}
+        </span>
+        <span class="text-xs text-gray-500">{{ log.timestamp|date:"Y-m-d H:i:s" }}</span>
+      </div>
+
+      <!-- Message -->
+      <p class="text-gray-800 font-medium mb-2">{{ log.message }}</p>
+
+      <!-- Source & Anomaly Badge -->
+      <div class="flex justify-between items-center">
+        <span class="text-sm text-gray-500 italic">Source: {{ log.source }}</span>
+        {% if log.is_anomaly %}
+          <span class="bg-red-100 text-red-700 text-xs px-2 py-1 rounded-full font-bold">
+            Anomaly
+          </span>
+        {% endif %}
+      </div>
+    </div>
+  {% empty %}
+    <p class="text-gray-600">No logs found for the selected filters.</p>
+  {% endfor %}
+</div>
+
+
+        <!-- Pagination -->
+       <div class="mt-6 flex justify-center space-x-2">
+  {% if page_obj.has_previous %}
+    <a href="?{% if request.GET %}{{ request.GET.urlencode }}&{% endif %}page={{ page_obj.previous_page_number }}"
+       class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 text-sm">Previous</a>
+  {% endif %}
+
+  <span class="px-4 py-2 bg-blue-500 text-white rounded text-sm">
+    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+  </span>
+
+  {% if page_obj.has_next %}
+    <a href="?{% if request.GET %}{{ request.GET.urlencode }}&{% endif %}page={{ page_obj.next_page_number }}"
+       class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 text-sm">Next</a>
+  {% endif %}
+</div>
+
+    </div>
+</body>
+</html>

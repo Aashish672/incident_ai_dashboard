@@ -20,6 +20,6 @@ from django.shortcuts import redirect
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('upload/',include('logs.urls')),
+    path('',include('logs.urls')),
     path('', lambda request: redirect('upload_logs')), 
 ]
