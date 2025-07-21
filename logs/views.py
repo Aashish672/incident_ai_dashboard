@@ -8,6 +8,13 @@ from django.core.paginator import Paginator
 from django.db.models import Q
 from django.http import HttpResponse
 from django.utils.dateparse import parse_datetime
+from django.shortcuts import get_object_or_404
+from django.db.models import Count
+from django.utils.timezone import now
+from datetime import timedelta
+from django.db.models.functions import TruncDate, ExtractHour
+from django.utils.timezone import datetime
+from django.db.models import Count
 
 
 def upload_logs(request):
@@ -98,3 +105,53 @@ def export_logs_csv(request):
         writer.writerow([log.timestamp,log.level,log.message,log.source,log.is_anomaly])
 
     return response
+
+def log_detail(request,pk):
+    log=get_object_or_404(LogEntry,pk=pk)
+    return render(request,'log_detail.html',{'log':log})
+
+def dashboard_view(request):
+    start = request.GET.get('start')
+    end = request.GET.get('end')
+    
+    logs = LogEntry.objects.all()
+    if start:
+        logs = logs.filter(timestamp__date__gte=start)
+    if end:
+        logs = logs.filter(timestamp__date__lte=end)
+
+    total_logs = logs.count()
+    total_anomalies = logs.filter(is_anomaly=True).count()
+
+    # --- Levels Summary ---
+    level_counts_qs = logs.values('level').annotate(count=Count('level'))
+    level_counts = {row['level']: row['count'] for row in level_counts_qs}
+    level_labels = list(level_counts.keys())
+    level_values = list(level_counts.values())
+
+    # --- Trend chart: logs per day ---
+    daily_logs = (logs.annotate(date=TruncDate('timestamp')).values('date').annotate(count=Count('id')).order_by('date'))
+    date_labels = [entry['date'].strftime('%Y-%m-%d') for entry in daily_logs]
+    date_data = [entry['count'] for entry in daily_logs]
+
+# --- Heatmap: anomalies per hour ---
+    hourly_logs = (logs.filter(is_anomaly=True).annotate(hour=ExtractHour('timestamp')).values('hour').annotate(count=Count('id')).order_by('hour'))
+    hour_labels = list(range(24))
+    hour_data = [0] * 24
+    for row in hourly_logs:
+        hour_data[row['hour']] = row['count']
+
+    context = {
+        'total_logs': total_logs,
+        'total_anomalies': total_anomalies,
+        'level_counts': level_counts,
+        'level_labels': level_labels,
+        'level_data': level_values,
+        'date_labels': date_labels,
+        'date_data': date_data,
+        'hour_labels': hour_labels,
+        'hour_data': hour_data,
+        'start': start,
+        'end': end,
+    }
+    return render(request, 'dashboard.html', context)

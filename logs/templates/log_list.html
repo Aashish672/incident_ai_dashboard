@@ -74,7 +74,10 @@
       </div>
 
       <!-- Message -->
-      <p class="text-gray-800 font-medium mb-2">{{ log.message }}</p>
+      <a href="{% url 'log_detail' log.id %}" class="font-medium text-blue-600 hover:underline">
+    {{ log.message|truncatechars:80 }}
+</a>
+
 
       <!-- Source & Anomaly Badge -->
       <div class="flex justify-between items-center">

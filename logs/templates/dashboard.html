@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="p-6">
+  <h2 class="text-3xl font-extrabold text-gray-800 mb-6">📊 Incident Dashboard</h2>
+
+  <!-- Date Filter -->
+  <form method="get" class="mb-6 flex flex-wrap gap-4 items-end">
+    <div>
+      <label class="block text-sm font-medium text-gray-700">Start Date</label>
+      <input type="date" name="start" value="{{ start }}" class="border rounded p-2" />
+    </div>
+    <div>
+      <label class="block text-sm font-medium text-gray-700">End Date</label>
+      <input type="date" name="end" value="{{ end }}" class="border rounded p-2" />
+    </div>
+    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+      Filter
+    </button>
+  </form>
+
+  <!-- Summary Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <!-- Total Logs -->
+    <a href="{% url 'log_list' %}" class="block bg-white hover:bg-blue-50 transition p-6 rounded-2xl shadow-lg border border-blue-100">
+      <div class="flex items-center justify-between mb-2">
+        <h3 class="text-lg font-semibold text-blue-700">🗂️ Total Logs</h3>
+        <span class="text-blue-500 text-sm">View All</span>
+      </div>
+      <p class="text-4xl font-bold text-blue-800">{{ total_logs }}</p>
+    </a>
+
+    <!-- Total Anomalies -->
+    <a href="{% url 'log_list' %}?anomaly=true" class="block bg-white hover:bg-red-50 transition p-6 rounded-2xl shadow-lg border border-red-100">
+      <div class="flex items-center justify-between mb-2">
+        <h3 class="text-lg font-semibold text-red-700">🚨 Total Anomalies</h3>
+        <span class="text-red-500 text-sm">View</span>
+      </div>
+      <p class="text-4xl font-bold text-red-600">{{ total_anomalies }}</p>
+    </a>
+
+    <!-- Log Levels -->
+    <a href="{% url 'log_list' %}" class="block bg-white hover:bg-gray-50 transition p-6 rounded-2xl shadow-lg border border-gray-200">
+      <h3 class="text-lg font-semibold text-gray-800 mb-2">📈 Levels</h3>
+      <ul class="text-sm text-gray-700 space-y-1">
+        {% for level, count in level_counts.items %}
+          <li><span class="font-semibold">{{ level }}</span>: {{ count }}</li>
+        {% endfor %}
+      </ul>
+    </a>
+  </div>
+
+  <!-- Trend Line Chart -->
+  <div class="mt-8 bg-white p-6 rounded-2xl shadow border border-gray-100">
+    <div class="flex justify-between items-center mb-3">
+      <h3 class="text-lg font-semibold">📅 Daily Log Trend</h3>
+      <button onclick="downloadChart('trendChart', 'log_trend')" class="text-sm text-blue-600 hover:underline">📥 Download PNG</button>
+    </div>
+    <canvas id="trendChart" height="100"></canvas>
+  </div>
+
+  <!-- Hourly Anomalies Heatmap -->
+  <div class="mt-8 bg-white p-6 rounded-2xl shadow border border-gray-100">
+    <div class="flex justify-between items-center mb-3">
+      <h3 class="text-lg font-semibold">🔥 Anomalies by Hour</h3>
+      <button onclick="downloadChart('hourChart', 'hourly_anomalies')" class="text-sm text-blue-600 hover:underline">📥 Download PNG</button>
+    </div>
+    <canvas id="hourChart" height="100"></canvas>
+  </div>
+
+  <!-- Pie Chart for Levels -->
+  <div class="mt-8 bg-white p-6 rounded-2xl shadow border border-gray-100">
+    <div class="flex justify-between items-center mb-3">
+      <h3 class="text-lg font-semibold">🥧 Log Level Distribution</h3>
+      <button onclick="downloadChart('levelPieChart', 'log_level_pie')" class="text-sm text-blue-600 hover:underline">📥 Download PNG</button>
+    </div>
+    <canvas id="levelPieChart" height="100"></canvas>
+  </div>
+</div>
+
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- Charts Config -->
+<script>
+  // Line Chart – Logs over Time
+  const trendCtx = document.getElementById('trendChart').getContext('2d');
+  new Chart(trendCtx, {
+    type: 'line',
+    data: {
+      labels: {{ date_labels|safe }},
+      datasets: [{
+        label: 'Logs per Day',
+        data: {{ date_data|safe }},
+        borderColor: '#3b82f6',
+        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+        fill: true,
+        tension: 0.4,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false }
+      }
+    }
+  });
+
+  // Bar Chart – Anomalies per Hour
+  const hourCtx = document.getElementById('hourChart').getContext('2d');
+  new Chart(hourCtx, {
+    type: 'bar',
+    data: {
+      labels: {{ hour_labels|safe }},
+      datasets: [{
+        label: 'Anomalies',
+        data: {{ hour_data|safe }},
+        backgroundColor: 'rgba(239, 68, 68, 0.7)',
+        borderRadius: 4,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            stepSize: 1
+          }
+        }
+      }
+    }
+  });
+
+  // Pie Chart – Level Distribution
+  const pieCtx = document.getElementById('levelPieChart').getContext('2d');
+  new Chart(pieCtx, {
+    type: 'pie',
+    data: {
+      labels: {{ level_labels|safe }},
+      datasets: [{
+        data: {{ level_data|safe }},
+        backgroundColor: [
+          '#3b82f6',
+          '#f59e0b',
+          '#ef4444',
+          '#10b981'
+        ],
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          position: 'bottom'
+        }
+      }
+    }
+  });
+
+  // Export chart function
+  function downloadChart(canvasId, filename) {
+    const canvas = document.getElementById(canvasId);
+    const a = document.createElement('a');
+    a.download = filename + '.png';
+    a.href = canvas.toDataURL('image/png');
+    a.click();
+  }
+</script>
+{% endblock %}
