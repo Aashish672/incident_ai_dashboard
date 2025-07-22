@@ -9,6 +9,6 @@ class LogEntryAdmin(admin.ModelAdmin):
     list_filter = ('level', 'is_anomaly', 'source')
     search_fields = ('message', 'source')
     ordering = ('-timestamp',)  # 👈 Add this line
-    readonly_fields = ('timestamp', 'level', 'source', 'message', 'is_anomaly')
+    #readonly_fields = ('timestamp', 'level', 'source', 'message', 'is_anomaly')
 
 

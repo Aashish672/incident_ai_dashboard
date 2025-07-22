@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render,redirect
 from .forms import LogUploadForm
 from .models import LogEntry
 import csv
@@ -15,7 +15,8 @@ from datetime import timedelta
 from django.db.models.functions import TruncDate, ExtractHour
 from django.utils.timezone import datetime
 from django.db.models import Count
-
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 
 def upload_logs(request):
     logs = []
@@ -38,6 +39,20 @@ def upload_logs(request):
                 logs.append(log)
                 if is_anomaly:
                     anomalies.append(log)
+                    #Send real time alert for anomaly
+                    channel_layer=get_channel_layer()
+                    async_to_sync(channel_layer.group_send)(
+                        "logs",
+                        {
+                            "type":"send_log",
+                            "log":{
+                                "level":log.level,
+                                "message":log.message,
+                                "timestamp":log.timestamp.strftime("%Y-%m-%d %H:%M:%S"),
+                            },
+                        }
+                    )
+            return redirect('dashboard')
     else:
         form = LogUploadForm()
 
@@ -141,6 +156,7 @@ def dashboard_view(request):
     for row in hourly_logs:
         hour_data[row['hour']] = row['count']
 
+    recent_logs = logs.order_by('-timestamp')[:10]
     context = {
         'total_logs': total_logs,
         'total_anomalies': total_anomalies,
@@ -153,5 +169,6 @@ def dashboard_view(request):
         'hour_data': hour_data,
         'start': start,
         'end': end,
+        'recent_logs':recent_logs,
     }
     return render(request, 'dashboard.html', context)

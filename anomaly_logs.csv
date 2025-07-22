@@ -1,0 +1,11 @@
+timestamp,level,message,source
+2025-07-22T09:14:00,ERROR,Disk read error on /dev/sda1,DiskMonitor
+2025-07-22T09:18:30,CRITICAL,CPU temperature exceeded safe limit,SystemHealth
+2025-07-22T09:25:00,ERROR,Application crashed unexpectedly,AppCore
+2025-07-22T09:30:45,CRITICAL,Database connection failure,DBService
+2025-07-22T09:33:15,ERROR,Failed to load configuration file,ConfigLoader
+2025-07-22T09:40:00,ERROR,File permission error detected,SecurityAgent
+2025-07-22T09:50:30,CRITICAL,Out of memory in main service,ServiceManager
+2025-07-22T10:00:00,ERROR,Uncaught exception in worker thread,WorkerPool
+2025-07-22T10:05:10,ERROR,Backup restoration failed due to checksum error,BackupService
+2025-07-22T10:10:45,CRITICAL,Multiple failed login attempts detected,AuthSystem
