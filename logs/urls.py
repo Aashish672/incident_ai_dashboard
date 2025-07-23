@@ -6,5 +6,6 @@ urlpatterns = [
     path('upload/', views.upload_logs, name='upload_logs'),
     path('logs/<int:pk>',views.log_detail,name='log_detail'),
     path('logs/export/',views.export_logs_csv,name='export_logs_csv'),
-    path('dashboard/',views.dashboard_view,name='dashboard')
+    path('dashboard/',views.dashboard_view,name='dashboard'),
+    path('export/anomalies/',views.export_anomalies_csv,name='export_anomalies')
 ]

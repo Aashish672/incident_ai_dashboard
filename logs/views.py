@@ -1,22 +1,16 @@
-from django.shortcuts import render,redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from .forms import LogUploadForm
 from .models import LogEntry
 import csv
 import io
-from datetime import datetime
 from django.core.paginator import Paginator
-from django.db.models import Q
+from django.db.models import Q, Count
 from django.http import HttpResponse
-from django.utils.dateparse import parse_datetime
-from django.shortcuts import get_object_or_404
-from django.db.models import Count
-from django.utils.timezone import now
-from datetime import timedelta
 from django.db.models.functions import TruncDate, ExtractHour
-from django.utils.timezone import datetime
-from django.db.models import Count
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
+from scripts.log_processor import run
+from django.contrib import messages
 
 def upload_logs(request):
     logs = []
@@ -30,28 +24,29 @@ def upload_logs(request):
             for row in reader:
                 is_anomaly = 'error' in row['message'].lower() or row['level'].lower() == 'critical'
                 log = LogEntry.objects.create(
-                    timestamp=datetime.fromisoformat(row['timestamp']),
+                    timestamp=row['timestamp'],
                     level=row['level'],
                     message=row['message'],
                     source=row['source'],
                     is_anomaly=is_anomaly,
                 )
                 logs.append(log)
+                # Send real-time alert if anomaly detected
                 if is_anomaly:
-                    anomalies.append(log)
-                    #Send real time alert for anomaly
-                    channel_layer=get_channel_layer()
+                    channel_layer = get_channel_layer()
                     async_to_sync(channel_layer.group_send)(
                         "logs",
                         {
-                            "type":"send_log",
-                            "log":{
-                                "level":log.level,
-                                "message":log.message,
-                                "timestamp":log.timestamp.strftime("%Y-%m-%d %H:%M:%S"),
+                            "type": "send_log",
+                            "log": {
+                                "level": log.level,
+                                "message": log.message,
+                                "timestamp": str(log.timestamp),
                             },
                         }
                     )
+            run()
+            messages.success(request, f"Uploaded {len(logs)} logs. Anomalies: {sum(l.is_anomaly for l in logs)}")
             return redirect('dashboard')
     else:
         form = LogUploadForm()
@@ -59,104 +54,112 @@ def upload_logs(request):
     return render(request, 'upload_logs.html', {
         'form': form,
         'logs': logs,
-        'anomalies': anomalies
+        'anomalies': anomalies,
     })
 
 
 def log_list(request):
-    logs=LogEntry.objects.all().order_by('-timestamp')
-
-    level=request.GET.get('level')
-    show_anomalies=request.GET.get('anomaly')=='true'
-    start_date=request.GET.get('start')
-    end_date=request.GET.get('end')
-    search_query=request.GET.get('search','').strip()
+    logs = LogEntry.objects.all().order_by('-timestamp')
+    level = request.GET.get('level')
+    show_anomalies = request.GET.get('anomaly') == 'true'
+    start_date = request.GET.get('start')
+    end_date = request.GET.get('end')
+    search_query = request.GET.get('search', '').strip()
 
     if show_anomalies:
-        logs=logs.filter(is_anomaly=True)
-    
+        logs = logs.filter(is_anomaly=True)
     if level:
-        logs=logs.filter(level=level)
-
+        logs = logs.filter(level=level)
     if start_date and end_date:
-        logs=logs.filter(timestamp__range=[start_date,end_date])
-    
+        logs = logs.filter(timestamp__range=[start_date, end_date])
     if search_query:
-        logs=logs.filter(Q(message__icontains=search_query) | Q(source__icontains=search_query))
+        logs = logs.filter(Q(message__icontains=search_query) | Q(source__icontains=search_query))
 
-    paginator=Paginator(logs,10)
-    page_number=request.GET.get('page')
-    page_obj=paginator.get_page(page_number)
+    paginator = Paginator(logs, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
 
-    return render(request,'log_list.html',{'page_obj':page_obj})
+    return render(request, 'log_list.html', {
+        'page_obj': page_obj,
+        'show_anomalies': show_anomalies,
+        'level': level,
+        'start': start_date,
+        'end': end_date,
+        'search_query': search_query,
+    })
+
 
 def export_logs_csv(request):
-    logs=LogEntry.objects.all().order_by('-timestamp')
-
-    level=request.GET.get('level')
-    show_anomalies=request.GET.get('anomaly')=='true'
-    start_date=request.GET.get('start')
-    end_date=request.GET.get('end')
+    logs = LogEntry.objects.all().order_by('-timestamp')
+    level = request.GET.get('level')
+    show_anomalies = request.GET.get('anomaly') == 'true'
+    start_date = request.GET.get('start')
+    end_date = request.GET.get('end')
 
     if level:
-        logs=logs.filter(level=level)
-
+        logs = logs.filter(level=level)
     if show_anomalies:
-        logs=logs.filter(is_anomaly=True)
+        logs = logs.filter(is_anomaly=True)
+    if start_date and end_date:
+        logs = logs.filter(timestamp__range=[start_date, end_date])
 
-    if start_date:
-        logs=logs.filter(timestamp__date__gte=start_date)
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="filtered_logs.csv"'
 
-    if end_date:
-        logs=logs.filter(timestamp__date__lte=end_date)
-
-    response=HttpResponse(content_type='text/csv')
-    response['Content-Disposition']='attachment; filename="filtered_logs.csv"'
-
-    writer=csv.writer(response)
-    writer.writerow(['Timestamp','Level','Message','Source','Anomaly'])
+    writer = csv.writer(response)
+    writer.writerow(['Timestamp', 'Level', 'Message', 'Source', 'Anomaly'])
 
     for log in logs:
-        writer.writerow([log.timestamp,log.level,log.message,log.source,log.is_anomaly])
+        writer.writerow([log.timestamp, log.level, log.message, log.source, log.is_anomaly])
 
     return response
 
-def log_detail(request,pk):
-    log=get_object_or_404(LogEntry,pk=pk)
-    return render(request,'log_detail.html',{'log':log})
+
+def log_detail(request, pk):
+    log = get_object_or_404(LogEntry, pk=pk)
+    return render(request, 'log_detail.html', {'log': log})
+
 
 def dashboard_view(request):
     start = request.GET.get('start')
     end = request.GET.get('end')
-    
+    show_anomalies = request.GET.get('anomaly') == 'true'
+
     logs = LogEntry.objects.all()
     if start:
         logs = logs.filter(timestamp__date__gte=start)
     if end:
         logs = logs.filter(timestamp__date__lte=end)
+    if show_anomalies:
+        logs = logs.filter(is_anomaly=True)
 
     total_logs = logs.count()
     total_anomalies = logs.filter(is_anomaly=True).count()
 
-    # --- Levels Summary ---
+    # Levels Summary
     level_counts_qs = logs.values('level').annotate(count=Count('level'))
     level_counts = {row['level']: row['count'] for row in level_counts_qs}
     level_labels = list(level_counts.keys())
     level_values = list(level_counts.values())
 
-    # --- Trend chart: logs per day ---
-    daily_logs = (logs.annotate(date=TruncDate('timestamp')).values('date').annotate(count=Count('id')).order_by('date'))
+    # Trend chart: logs per day
+    daily_logs = (logs.annotate(date=TruncDate('timestamp'))
+                       .values('date').annotate(count=Count('id')).order_by('date'))
     date_labels = [entry['date'].strftime('%Y-%m-%d') for entry in daily_logs]
     date_data = [entry['count'] for entry in daily_logs]
 
-# --- Heatmap: anomalies per hour ---
-    hourly_logs = (logs.filter(is_anomaly=True).annotate(hour=ExtractHour('timestamp')).values('hour').annotate(count=Count('id')).order_by('hour'))
+    # Heatmap: anomalies per hour
+    hourly_logs = (logs.filter(is_anomaly=True)
+                       .annotate(hour=ExtractHour('timestamp'))
+                       .values('hour').annotate(count=Count('id'))
+                       .order_by('hour'))
     hour_labels = list(range(24))
     hour_data = [0] * 24
     for row in hourly_logs:
         hour_data[row['hour']] = row['count']
 
     recent_logs = logs.order_by('-timestamp')[:10]
+
     context = {
         'total_logs': total_logs,
         'total_anomalies': total_anomalies,
@@ -169,6 +172,18 @@ def dashboard_view(request):
         'hour_data': hour_data,
         'start': start,
         'end': end,
-        'recent_logs':recent_logs,
+        'show_anomalies': show_anomalies,
+        'recent_logs': recent_logs,
     }
     return render(request, 'dashboard.html', context)
+
+
+def export_anomalies_csv(request):
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment;filename="anomalies.csv"'
+    writer = csv.writer(response)
+    writer.writerow(['Timestamp', 'Level', 'Message', 'Source'])
+    anomalies = LogEntry.objects.filter(is_anomaly=True).order_by('-timestamp')
+    for log in anomalies:
+        writer.writerow([log.timestamp, log.level, log.message, log.source])
+    return response

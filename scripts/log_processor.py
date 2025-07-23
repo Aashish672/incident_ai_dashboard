@@ -31,11 +31,13 @@ def preprocess_and_detect_anomalies():
     for _, row in df.iterrows():
         is_anomaly = row['is_anomaly']
         log_id = row['id']
-        LogEntry.objects.filter(id=log_id).update(is_anomaly=is_anomaly)
+        log=LogEntry.objects.get(id=log_id)
+        log.is_anomaly = is_anomaly
         
-        if is_anomaly:
-            log=LogEntry.objects.get(id=log_id)
+        if is_anomaly and not log.alert_sent:
+            
             send_anomaly_alert(log)
+            log.alert_sent=True
             async_to_sync(channel_layer.group_send)(
                 "logs",
                 {
@@ -49,8 +51,7 @@ def preprocess_and_detect_anomalies():
                     }
                 }
             )
-
-
+        
     print(f"Processed {len(df)} logs. Anomalies detected: {df['is_anomaly'].sum()}")
 
 def run():

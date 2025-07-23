@@ -15,6 +15,7 @@ class LogEntry(models.Model):
     message=models.TextField()
     source=models.CharField(max_length=255,blank=True,null=True)
     is_anomaly=models.BooleanField(default=False)
+    alert_sent=models.BooleanField(default=False)
      
     def __str__(self):
         return f"[{self.timestamp}]{self.level}-{self.message[:50]}"

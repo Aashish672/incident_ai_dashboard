@@ -5,7 +5,7 @@ from .models import LogEntry
 
 @admin.register(LogEntry)
 class LogEntryAdmin(admin.ModelAdmin):
-    list_display = ('timestamp', 'level', 'source', 'is_anomaly')
+    list_display = ('timestamp', 'level', 'source', 'is_anomaly','alert_sent')
     list_filter = ('level', 'is_anomaly', 'source')
     search_fields = ('message', 'source')
     ordering = ('-timestamp',)  # 👈 Add this line

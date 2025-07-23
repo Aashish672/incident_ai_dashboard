@@ -7,5 +7,13 @@
 </head>
 <body class="bg-gray-50 text-gray-800">
     {% block content %}{% endblock %}
+    {% if messages %}
+    <div class="p-4 bg-green-100 text-green-800 rounded-lg mb-4">
+        {% for message in messages %}
+        {{ message }}
+        {% endfor %}
+    </div>
+    {% endif %}
+
 </body>
 </html>
