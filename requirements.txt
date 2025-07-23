@@ -1,0 +1,22 @@
+# Django & Channels
+Django>=5.0
+daphne>=4.0
+channels>=4.0
+
+# ML and Data Processing
+pandas>=2.0
+numpy>=1.24
+scikit-learn>=1.4
+
+# Redis (for optional async messaging or Celery if re-enabled)
+channels-redis>=4.1
+redis>=5.0
+
+# Email Utilities (built-in to Django, no external SMTP lib required)
+
+# Optional: Celery (disabled for now)
+# celery>=5.3
+# billiard>=4.1
+
+# Dev tools
+python-dotenv>=1.0
