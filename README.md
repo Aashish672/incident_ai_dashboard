@@ -66,7 +66,7 @@ incident_ai_dashboard/
 
 ### 1. Clone and Set Up the Project
 
-git clone https://github.com/yourusername/incident-ai-dashboard.git
+git clone https://github.com/Aashish672/incident-ai-dashboard.git
 cd incident-ai-dashboard
 
 python -m venv venv
