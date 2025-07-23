@@ -81,6 +81,7 @@ pip install -r requirements.txt
 
 Inside `incident_ai/settings.py`, add your Gmail SMTP credentials:
 
+EMAIL_BACKEND='django.core.mail.backends.smtp.EmailBackend'
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
