@@ -81,7 +81,6 @@ pip install -r requirements.txt
 
 Inside `incident_ai/settings.py`, add your Gmail SMTP credentials:
 
-EMAIL_BACKEND='django.core.mail.backends.smtp.EmailBackend'
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
@@ -98,6 +97,7 @@ EMAIL_HOST_PASSWORD = 'your_app_password'
 
 python manage.py makemigrations
 python manage.py migrate
+
 
 
 ---
@@ -117,6 +117,7 @@ timestamp,level,message,source
 2025-07-21T14:40:00,CRITICAL,Disk full warning,server3
 
 
+
 Upload these files via the dashboard UI to begin processing and visualization.
 
 ---
@@ -126,9 +127,8 @@ Upload these files via the dashboard UI to begin processing and visualization.
 Manually trigger the log processor from the Django shell:
 
 python manage.py shell
-
-from log_processor import run
-run()
+>>> from log_processor import run
+>>> run()
 
 
 ---
