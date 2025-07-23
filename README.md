@@ -173,7 +173,7 @@ Contributions, ideas, and issues are welcome!
 For support, questions, or collaboration, feel free to reach out:
 
 📧 **38aashishkumarsingh11a@gmail.com@gmail.com**  
-🔗 GitHub: [https://github.com/yourusername](https://github.com/yourusername)
+🔗 GitHub: [https://github.com/Aashish672](https://github.com/Aashish672)
 
 ---
 
