@@ -11,6 +11,8 @@ from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 from scripts.log_processor import run
 from django.contrib import messages
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth import login
 
 def upload_logs(request):
     logs = []
@@ -187,3 +189,15 @@ def export_anomalies_csv(request):
     for log in anomalies:
         writer.writerow([log.timestamp, log.level, log.message, log.source])
     return response
+
+
+def register(request):
+    if request.method=='POST':
+        form=UserCreationForm(request.POST)
+        if form.is_valid():
+            user=form.save()
+            login(request,user)
+            return redirect('dashboard')
+    else:
+        form=UserCreationForm()
+    return render(request,'auth/register.html',{'form':form})

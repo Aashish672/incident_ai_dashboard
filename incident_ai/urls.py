@@ -15,11 +15,24 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path,include
+from django.urls import path, include
+from django.contrib.auth import views as auth_views
+from logs import views as log_views  
 from django.shortcuts import redirect
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('',include('logs.urls')),
-    path('', lambda request: redirect('upload_logs')), 
+
+    path('login/', auth_views.LoginView.as_view(template_name='auth/login.html'), name='login'),
+    path('logout/', auth_views.LogoutView.as_view(next_page='login'), name='logout'),
+    path('register/', log_views.register, name='register'),
+    path('', auth_views.LoginView.as_view(template_name='auth/login.html')),
+    # your app urls
+    path('logs', include('logs.urls')),
+
+    # Redirect default root to 'upload_logs' if needed, 
+    # but only if 'upload_logs' is a named URL in logs.urls
+    #path('', lambda request: redirect('upload_logs')),  # This conflicts with the above line
+
 ]
+

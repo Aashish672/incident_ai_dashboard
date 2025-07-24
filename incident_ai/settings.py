@@ -144,4 +144,5 @@ CHANNEL_LAYERS = {
     }
 }
 
-
+LOGIN_REDIRECT_URL='/logs'
+LOGIN_URL='/login/'
