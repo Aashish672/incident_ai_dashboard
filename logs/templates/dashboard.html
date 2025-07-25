@@ -9,7 +9,20 @@
 </style>
 
 <div class="p-6">
-  <h2 class="text-3xl font-extrabold text-gray-800 mb-6">📊 Incident Dashboard</h2>
+
+  <div class="flex items-center justify-between mb-6">
+    <h2 class="text-3xl font-extrabold text-gray-800">📊 Incident Dashboard</h2>
+    <form method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit" class="flex items-center space-x-1 px-4 py-2 bg-red-600 text-white rounded-lg shadow hover:bg-red-700 transition">
+            <span>🔓</span>
+            <span>Logout</span>
+        </button>
+    </form>
+</div>
+
+
+
 
   <!-- Date & Anomaly Filter Form -->
   <form method="get" class="mb-6 flex flex-wrap gap-4 items-end">
@@ -29,13 +42,13 @@
     <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 mt-6">
       Apply Filters
     </button>
-    <a href="{% url 'export_anomalies' %}" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 mt-6">
+    <a href="{% url 'logs:export_anomalies' %}" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 mt-6">
       ⬇️ Download Anomalies (CSV)
     </a>
-    <a href="{% url 'log_list' %}" class="px-4 py-2 bg-indigo-600 text-white rounded-lg shadow hover:bg-indigo-700 transition mt-6">
+    <a href="{% url 'logs:log_list' %}" class="px-4 py-2 bg-indigo-600 text-white rounded-lg shadow hover:bg-indigo-700 transition mt-6">
       ← Back to Logs
     </a>
-    <a href="{% url 'upload_logs' %}" class="px-4 py-2 bg-purple-600 text-white rounded-lg shadow hover:bg-purple-700 transition mt-6">
+    <a href="{% url 'logs:upload_logs' %}" class="px-4 py-2 bg-purple-600 text-white rounded-lg shadow hover:bg-purple-700 transition mt-6">
       ⬆️ Upload Logs
     </a>
   </form>
@@ -43,7 +56,7 @@
   <!-- Summary Cards -->
   <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
     <!-- Total Logs -->
-    <a href="{% url 'log_list' %}" class="block bg-white hover:bg-blue-50 transition p-6 rounded-2xl shadow-lg border border-blue-100">
+    <a href="{% url 'logs:log_list' %}" class="block bg-white hover:bg-blue-50 transition p-6 rounded-2xl shadow-lg border border-blue-100">
       <div class="flex items-center justify-between mb-2">
         <h3 class="text-lg font-semibold text-blue-700">🗂️ Total Logs</h3>
         <span class="text-blue-500 text-sm">View All</span>
@@ -52,7 +65,7 @@
     </a>
 
     <!-- Total Anomalies -->
-    <a href="{% url 'log_list' %}?anomaly=true" class="block bg-white hover:bg-red-50 transition p-6 rounded-2xl shadow-lg border border-red-100">
+    <a href="{% url 'logs:log_list' %}?anomaly=true" class="block bg-white hover:bg-red-50 transition p-6 rounded-2xl shadow-lg border border-red-100">
       <div class="flex items-center justify-between mb-2">
         <h3 class="text-lg font-semibold text-red-700">🚨 Total Anomalies</h3>
         <span class="text-red-500 text-sm">View</span>

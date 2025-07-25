@@ -51,6 +51,7 @@ def preprocess_and_detect_anomalies():
                     }
                 }
             )
+        log.save()
         
     print(f"Processed {len(df)} logs. Anomalies detected: {df['is_anomaly'].sum()}")
 

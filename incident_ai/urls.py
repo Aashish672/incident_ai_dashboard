@@ -17,22 +17,39 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django.contrib.auth import views as auth_views
-from logs import views as log_views  
+from logs import views as log_views
 from django.shortcuts import redirect
+from django.conf import settings
+from django.conf.urls.static import static
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
 
-    path('login/', auth_views.LoginView.as_view(template_name='auth/login.html'), name='login'),
-    path('logout/', auth_views.LogoutView.as_view(next_page='login'), name='logout'),
+    # Landing page at root
+    path('', log_views.landing_page, name='landing'),
+
+    # Auth: login, logout, register
+    path('login/', auth_views.LoginView.as_view(
+             template_name='auth/login.html'), name='login'),
+    path('logout/', auth_views.LogoutView.as_view(next_page='landing'), name='logout'),
+
     path('register/', log_views.register, name='register'),
-    path('', auth_views.LoginView.as_view(template_name='auth/login.html')),
-    # your app urls
-    path('logs', include('logs.urls')),
+
+    # Your app urls under /logs/
+    path('logs/', include('logs.urls')),
+]+ static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+
+    # path('login/', auth_views.LoginView.as_view(template_name='auth/login.html'), name='login'),
+    # path('logout/', auth_views.LogoutView.as_view(next_page='login'), name='logout'),
+    # path('register/', log_views.register, name='register'),
+    # path('', auth_views.LoginView.as_view(template_name='auth/login.html')),
+    # # your app urls
+    # path('logs', include('logs.urls')),
 
     # Redirect default root to 'upload_logs' if needed, 
     # but only if 'upload_logs' is a named URL in logs.urls
     #path('', lambda request: redirect('upload_logs')),  # This conflicts with the above line
 
-]
+
 

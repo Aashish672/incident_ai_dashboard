@@ -14,9 +14,23 @@ from django.contrib import messages
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import login
 
+from django.contrib.auth.decorators import login_required
+from .decorators import admin_required
+from django.contrib import messages
+import csv, io
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
+from .models import LogEntry
+from .forms import LogUploadForm
+from scripts.log_processor import run
+from datetime import datetime
+
+@login_required
+#@admin_required
 def upload_logs(request):
     logs = []
     anomalies = []
+
     if request.method == 'POST':
         form = LogUploadForm(request.POST, request.FILES)
         if form.is_valid():
@@ -24,15 +38,26 @@ def upload_logs(request):
             decoded = file.read().decode('utf-8')
             reader = csv.DictReader(io.StringIO(decoded))
             for row in reader:
+                # Convert timestamp to datetime object
+                try:
+                    timestamp = datetime.fromisoformat(row['timestamp'])
+                except ValueError:
+                    messages.error(request, f"Invalid timestamp format: {row['timestamp']}")
+                    continue
+
                 is_anomaly = 'error' in row['message'].lower() or row['level'].lower() == 'critical'
+                
                 log = LogEntry.objects.create(
-                    timestamp=row['timestamp'],
+                    user=request.user,
+                    timestamp=timestamp,
                     level=row['level'],
                     message=row['message'],
                     source=row['source'],
                     is_anomaly=is_anomaly,
                 )
                 logs.append(log)
+
+
                 # Send real-time alert if anomaly detected
                 if is_anomaly:
                     channel_layer = get_channel_layer()
@@ -47,9 +72,11 @@ def upload_logs(request):
                             },
                         }
                     )
+
+            # Run anomaly detection pipeline
             run()
             messages.success(request, f"Uploaded {len(logs)} logs. Anomalies: {sum(l.is_anomaly for l in logs)}")
-            return redirect('dashboard')
+            return redirect('logs:dashboard')
     else:
         form = LogUploadForm()
 
@@ -59,9 +86,13 @@ def upload_logs(request):
         'anomalies': anomalies,
     })
 
-
+@login_required
 def log_list(request):
-    logs = LogEntry.objects.all().order_by('-timestamp')
+    
+    if request.user.profile.role=='admin':
+        logs=LogEntry.objects.all().order_by('-timestamp')
+    else:
+        logs=LogEntry.objects.filter(user=request.user).order_by('-timestamp')
     level = request.GET.get('level')
     show_anomalies = request.GET.get('anomaly') == 'true'
     start_date = request.GET.get('start')
@@ -121,13 +152,20 @@ def log_detail(request, pk):
     log = get_object_or_404(LogEntry, pk=pk)
     return render(request, 'log_detail.html', {'log': log})
 
-
+@login_required
 def dashboard_view(request):
+    # Filters from query parameters
     start = request.GET.get('start')
     end = request.GET.get('end')
     show_anomalies = request.GET.get('anomaly') == 'true'
 
-    logs = LogEntry.objects.all()
+    # Role-based filtering
+    if request.user.profile.role == 'admin':
+        logs = LogEntry.objects.all()
+    else:
+        logs = LogEntry.objects.filter(user=request.user)
+
+    # Date and anomaly filtering
     if start:
         logs = logs.filter(timestamp__date__gte=start)
     if end:
@@ -138,19 +176,19 @@ def dashboard_view(request):
     total_logs = logs.count()
     total_anomalies = logs.filter(is_anomaly=True).count()
 
-    # Levels Summary
+    # Level-wise aggregation for summary and charts
     level_counts_qs = logs.values('level').annotate(count=Count('level'))
     level_counts = {row['level']: row['count'] for row in level_counts_qs}
     level_labels = list(level_counts.keys())
     level_values = list(level_counts.values())
 
-    # Trend chart: logs per day
+    # Trend per day
     daily_logs = (logs.annotate(date=TruncDate('timestamp'))
-                       .values('date').annotate(count=Count('id')).order_by('date'))
+                      .values('date').annotate(count=Count('id')).order_by('date'))
     date_labels = [entry['date'].strftime('%Y-%m-%d') for entry in daily_logs]
     date_data = [entry['count'] for entry in daily_logs]
 
-    # Heatmap: anomalies per hour
+    # Anomaly per hour (for heatmaps)
     hourly_logs = (logs.filter(is_anomaly=True)
                        .annotate(hour=ExtractHour('timestamp'))
                        .values('hour').annotate(count=Count('id'))
@@ -179,7 +217,6 @@ def dashboard_view(request):
     }
     return render(request, 'dashboard.html', context)
 
-
 def export_anomalies_csv(request):
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment;filename="anomalies.csv"'
@@ -195,9 +232,11 @@ def register(request):
     if request.method=='POST':
         form=UserCreationForm(request.POST)
         if form.is_valid():
-            user=form.save()
-            login(request,user)
-            return redirect('dashboard')
+            form.save()
+            return redirect('login')
     else:
         form=UserCreationForm()
     return render(request,'auth/register.html',{'form':form})
+
+def landing_page(request):
+    return render(request, 'landing.html')  # Your landing page template
