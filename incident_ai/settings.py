@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import os
+from django.urls import reverse_lazy
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -145,5 +146,5 @@ CHANNEL_LAYERS = {
     }
 }
 LOGIN_REDIRECT_URL = '/logs/dashboard/'
-LOGOUT_REDIRECT_URL='/login/'
+LOGOUT_REDIRECT_URL='/landing/'
 LOGIN_URL='/login/'

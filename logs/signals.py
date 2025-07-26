@@ -6,6 +6,10 @@ from .models import Profile
 @receiver(post_save,sender=User)
 def create_or_update_user_profile(sender,instance,created,**kwargs):
     if created:
-        Profile.objects.create(user=instance)
+        # If superuser, assign admin role
+        if instance.is_superuser:
+            Profile.objects.create(user=instance, role='admin')
+        else:
+            Profile.objects.create(user=instance,role='viewer')
     else:
         instance.profile.save()

@@ -1,19 +1,85 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Incident Dashboard</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Incident AI Dashboard{% endblock %}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  {% block extra_head %}{% endblock %}
 </head>
-<body class="bg-gray-50 text-gray-800">
-    {% block content %}{% endblock %}
-    {% if messages %}
-    <div class="p-4 bg-green-100 text-green-800 rounded-lg mb-4">
-        {% for message in messages %}
-        {{ message }}
-        {% endfor %}
-    </div>
-    {% endif %}
+<body class="bg-gray-50 text-gray-900 min-h-screen flex flex-col">
 
+  <!-- Navbar -->
+  <nav class="bg-white border-b border-gray-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex h-16 items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <a href="{% url 'landing' %}" class="text-lg font-bold text-gray-800">
+            Incident AI
+          </a>
+        </div>
+
+        <div class="flex items-center space-x-4">
+          {% if user.is_authenticated %}
+            <a href="{% url 'profile' %}" class="text-sm text-gray-700 hover:text-blue-600">Profile</a>
+            <a href="{% url 'password_change' %}" class="text-sm text-gray-700 hover:text-blue-600">Change password</a>
+            
+            <span class="hidden sm:inline text-sm text-gray-600">
+              Hi, <span class="font-semibold">{{ user.username }}</span>
+              {% if user.profile and user.profile.role %}
+                ({{ user.profile.role|title }})
+              {% else %}
+                (Viewer)
+              {% endif %}
+            </span>
+
+            <a href="{% url 'logs:dashboard' %}" class="text-sm text-gray-700 hover:text-blue-600">Dashboard</a>
+            <a href="{% url 'logs:log_list' %}" class="text-sm text-gray-700 hover:text-blue-600">Logs</a>
+            <a href="{% url 'logs:upload_logs' %}" class="text-sm text-gray-700 hover:text-blue-600">Upload</a>
+
+            <form method="post" action="{% url 'logout' %}" class="inline">
+              {% csrf_token %}
+              <button type="submit"
+                      class="text-sm px-3 py-1.5 bg-red-600 text-white rounded hover:bg-red-700">
+                Logout
+              </button>
+            </form>
+          {% else %}
+            <a href="{% url 'login' %}" class="text-sm px-3 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700">Login</a>
+            <a href="{% url 'register' %}" class="text-sm px-3 py-1.5 bg-green-600 text-white rounded hover:bg-green-700">Register</a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Flash messages -->
+  {% if messages %}
+    <div class="max-w-4xl mx-auto mt-4 w-full px-4">
+      {% for message in messages %}
+        <div class="mb-3 rounded p-3 text-white
+                    {% if message.tags == 'error' %}bg-red-500
+                    {% elif message.tags == 'warning' %}bg-yellow-500
+                    {% elif message.tags == 'success' %}bg-green-500
+                    {% else %}bg-blue-500{% endif %}">
+          {{ message }}
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <!-- Page content -->
+  <main class="flex-1">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="bg-white border-t border-gray-200 mt-12">
+    <div class="max-w-7xl mx-auto px-4 py-4 text-center text-sm text-gray-500">
+      &copy; {{ year|default:"2025" }} Incident AI — All rights reserved.
+    </div>
+  </footer>
+
+  {% block scripts %}{% endblock %}
 </body>
 </html>

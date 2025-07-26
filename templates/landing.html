@@ -1,80 +1,68 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Incident Management Dashboard</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-    <style>
-        body {
-            background: #f7f9fa;
-        }
-        .feature-check {
-            color: #28a745;
-            font-size: 1.4em;
-            vertical-align: middle;
-            margin-right: 8px;
-        }
-        .dashboard-preview {
-            border-radius: 12px;
-            box-shadow: 0 6px 24px rgba(60,72,88,.05);
-            background: white;
-            padding: 24px;
-            min-height: 420px;
-        }
-    </style>
-</head>
-<body>
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="#">AI Powered Incident Management Dashboard</a>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item"><a class="nav-link" href="{% url 'login' %}">Login</a></li>
-                    <li class="nav-item"><a class="nav-link btn btn-outline-primary ms-2" href="{% url 'register' %}">Register</a></li>
-                </ul>
-            </div>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-        </div>
-    </nav>
+{% extends "base.html" %}
+{% block title %}Incident AI — Monitor & Manage Incidents{% endblock %}
 
-    <!-- Main Content -->
-    <div class="container py-5">
-        <div class="row align-items-center">
-            <!-- Left: Project Info -->
-            <div class="col-lg-6 col-md-12 mb-4 mb-lg-0">
-                <h1 class="display-5 fw-bold mb-3">Monitor & Manage Incidents. <br><span class="text-primary">Any App. Any Stack.</span></h1>
-                <p class="mb-4 fs-5">
-                    <span class="fw-semibold">Incident AI</span> is an open, extensible dashboard for real-time incident monitoring, anomaly detection, and log collection — empowering SRE and DevOps teams to identify, investigate, and resolve issues across distributed systems, backends, and microservices.
-                </p>
-                <ul class="list-unstyled fs-5 mb-4">
-                    <li class="mb-2"><span class="feature-check">&#10003;</span>Monitor logs across all your apps</li>
-                    <li class="mb-2"><span class="feature-check">&#10003;</span>Real-time anomaly detection</li>
-                    <li class="mb-2"><span class="feature-check">&#10003;</span>Role-based access (Admin/Viewer)</li>
-                    <li class="mb-2"><span class="feature-check">&#10003;</span>Email alerts for critical incidents</li>
-                    <li><span class="feature-check">&#10003;</span>Secure, user-friendly authentication</li>
-                </ul>
-                <blockquote class="blockquote">
-                    <p class="mb-1 fst-italic">"A modern, vendor-neutral solution to effortlessly track, detect, and resolve incidents in your stack."</p>
-                    <footer class="blockquote-footer">Open Source Community</footer>
-                </blockquote>
-            </div>
-            <!-- Right: Dashboard Preview -->
-            <div class="col-lg-6 col-md-12">
-                <div class="dashboard-preview p-0">
-                     <img src="{% static 'img/image.png' %}" alt="Dashboard Preview" class="img-fluid rounded shadow-sm w-100" /> 
-                    <!-- Replace with your own dashboard screenshot, or keep this as placeholder -->
-                </div>
-            </div>
-        </div>
+{% block content %}
+<section class="max-w-7xl mx-auto px-4 py-14">
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
+    <!-- Left -->
+    <div>
+      <h1 class="text-4xl sm:text-5xl font-extrabold leading-tight mb-6">
+        Monitor &amp; Manage Incidents.<br>
+        <span class="text-blue-600">Any App. Any Stack.</span>
+      </h1>
+
+      <p class="text-gray-700 text-lg mb-6">
+        <span class="font-semibold">Incident AI</span> is an open, extensible dashboard for real-time incident
+        monitoring, anomaly detection, and log collection — empowering SRE and DevOps teams to identify, investigate,
+        and resolve issues across distributed systems, backends, and microservices.
+      </p>
+
+      <ul class="space-y-2 text-lg mb-8">
+        <li class="flex items-start">
+          <span class="text-green-600 mr-2">✓</span> Monitor logs across all your apps
+        </li>
+        <li class="flex items-start">
+          <span class="text-green-600 mr-2">✓</span> Real-time anomaly detection
+        </li>
+        <li class="flex items-start">
+          <span class="text-green-600 mr-2">✓</span> Role-based access (Admin/Viewer)
+        </li>
+        <li class="flex items-start">
+          <span class="text-green-600 mr-2">✓</span> Email alerts for critical incidents
+        </li>
+        <li class="flex items-start">
+          <span class="text-green-600 mr-2">✓</span> Secure, user-friendly authentication
+        </li>
+      </ul>
+
+      {% if not user.is_authenticated %}
+      <div class="space-x-3">
+        <a href="{% url 'register' %}" class="inline-block bg-green-600 text-white px-5 py-2 rounded-lg hover:bg-green-700">
+          Get Started
+        </a>
+        <a href="{% url 'login' %}" class="inline-block bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700">
+          Login
+        </a>
+      </div>
+      {% else %}
+      <a href="{% url 'logs:dashboard' %}" class="inline-block bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700">
+        Go to Dashboard
+      </a>
+      {% endif %}
     </div>
-    <footer class="bg-white text-center py-3 border-top mt-5 small text-muted">
-        &copy; {{ year|default:"2025" }} Incident AI &mdash; All rights reserved.
-    </footer>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+
+    <!-- Right: preview -->
+    <div>
+      <div class="bg-white border rounded-xl shadow p-4">
+        {% comment %} <img src="{% static 'img/image.png' %}" alt="Dashboard Preview" class="rounded-lg w-full" /> {% endcomment %}
+        <img src="" alt="Dashboard preview" class="rounded-l w-full"/>
+      </div>
+    </div>
+  </div>
+
+  <blockquote class="mt-10 border-l-4 border-blue-600 pl-4 italic text-gray-700">
+    "A modern, vendor-neutral solution to effortlessly track, detect, and resolve incidents in your stack."
+    <div class="text-sm text-gray-500 mt-2">— Open Source Community</div>
+  </blockquote>
+</section>
+{% endblock %}

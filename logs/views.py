@@ -24,6 +24,7 @@ from .models import LogEntry
 from .forms import LogUploadForm
 from scripts.log_processor import run
 from datetime import datetime
+from .forms import CustomUserCreationForm
 
 @login_required
 #@admin_required
@@ -230,13 +231,21 @@ def export_anomalies_csv(request):
 
 def register(request):
     if request.method=='POST':
-        form=UserCreationForm(request.POST)
+        form=CustomUserCreationForm(request.POST)
         if form.is_valid():
             form.save()
             return redirect('login')
     else:
-        form=UserCreationForm()
+        form=CustomUserCreationForm()
     return render(request,'auth/register.html',{'form':form})
 
 def landing_page(request):
     return render(request, 'landing.html')  # Your landing page template
+
+@login_required
+def profile_view(request):
+    profile=getattr(request.user,'profile',None)
+    return render(request,'auth/profile.html',{
+        'user':request.user,
+        'profile':profile,
+    })

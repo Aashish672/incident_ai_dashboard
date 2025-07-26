@@ -1,30 +1,18 @@
 {% extends "base.html" %}
 
-{% block content %}
+{% block title %}Dashboard | Incident AI{% endblock %}
+
+{% block extra_head %}
 <style>
-  canvas {
-    max-width: 100%;
-    height: auto;
-  }
+  canvas { max-width: 100%; height: auto; }
 </style>
+{% endblock %}
 
-<div class="p-6">
+{% block content %}
+<div class="max-w-7xl mx-auto p-6">
+  <h2 class="text-3xl font-extrabold text-gray-800 mb-6">📊 Incident Dashboard</h2>
 
-  <div class="flex items-center justify-between mb-6">
-    <h2 class="text-3xl font-extrabold text-gray-800">📊 Incident Dashboard</h2>
-    <form method="post" action="{% url 'logout' %}">
-        {% csrf_token %}
-        <button type="submit" class="flex items-center space-x-1 px-4 py-2 bg-red-600 text-white rounded-lg shadow hover:bg-red-700 transition">
-            <span>🔓</span>
-            <span>Logout</span>
-        </button>
-    </form>
-</div>
-
-
-
-
-  <!-- Date & Anomaly Filter Form -->
+  <!-- Filters -->
   <form method="get" class="mb-6 flex flex-wrap gap-4 items-end">
     <div>
       <label class="block text-sm font-medium text-gray-700">Start Date</label>
@@ -34,14 +22,16 @@
       <label class="block text-sm font-medium text-gray-700">End Date</label>
       <input type="date" name="end" value="{{ end }}" class="border rounded p-2" />
     </div>
-    <!-- Anomaly Checkbox -->
+
     <label class="inline-flex items-center text-sm mt-6 ml-2">
       <input type="checkbox" name="anomaly" value="true" {% if show_anomalies %}checked{% endif %} class="mr-2">
       Show only anomalies
     </label>
+
     <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 mt-6">
       Apply Filters
     </button>
+
     <a href="{% url 'logs:export_anomalies' %}" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 mt-6">
       ⬇️ Download Anomalies (CSV)
     </a>
@@ -55,7 +45,6 @@
 
   <!-- Summary Cards -->
   <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-    <!-- Total Logs -->
     <a href="{% url 'logs:log_list' %}" class="block bg-white hover:bg-blue-50 transition p-6 rounded-2xl shadow-lg border border-blue-100">
       <div class="flex items-center justify-between mb-2">
         <h3 class="text-lg font-semibold text-blue-700">🗂️ Total Logs</h3>
@@ -64,7 +53,6 @@
       <p class="text-4xl font-bold text-blue-800">{{ total_logs }}</p>
     </a>
 
-    <!-- Total Anomalies -->
     <a href="{% url 'logs:log_list' %}?anomaly=true" class="block bg-white hover:bg-red-50 transition p-6 rounded-2xl shadow-lg border border-red-100">
       <div class="flex items-center justify-between mb-2">
         <h3 class="text-lg font-semibold text-red-700">🚨 Total Anomalies</h3>
@@ -73,21 +61,19 @@
       <p class="text-4xl font-bold text-red-600">{{ total_anomalies }}</p>
     </a>
 
-    <!-- Log Levels -->
-    <div class="block bg-white hover:bg-gray-50 transition p-6 rounded-2xl shadow-lg border border-gray-200 cursor-pointer hover:shadow-xl">
+    <div class="block bg-white hover:bg-gray-50 transition p-6 rounded-2xl shadow-lg border border-gray-200">
       <h3 class="text-lg font-semibold text-gray-800 mb-2">📈 Levels</h3>
       <ul class="text-sm text-gray-700 space-y-1">
         {% for level, count in level_counts.items %}
           <li class="flex items-center">
             <span class="inline-block w-3 h-3 rounded-full mr-2"
-                  style="background-color: 
-                    {% if level == 'CRITICAL' %}#ef4444
-                    {% elif level == 'ERROR' %}#f59e0b
-                    {% elif level == 'WARNING' %}#7c3aed
-                    {% elif level == 'INFO' %}#10b981
-                    {% elif level == 'DEBUG' %}#3b82f6
-                    {% else %}gray
-                    {% endif %};"></span>
+                  style="background-color:
+                          {% if level == 'CRITICAL' %}#ef4444
+                          {% elif level == 'ERROR' %}#f59e0b
+                          {% elif level == 'WARNING' %}#7c3aed
+                          {% elif level == 'INFO' %}#10b981
+                          {% elif level == 'DEBUG' %}#3b82f6
+                          {% else %}gray{% endif %};"></span>
             <span class="font-semibold">{{ level }}</span>: {{ count }}
           </li>
         {% endfor %}
@@ -95,9 +81,8 @@
     </div>
   </div>
 
-  <!-- Charts Section -->
+  <!-- Charts -->
   <div class="flex flex-wrap gap-6 mt-8">
-    <!-- Trend Line Chart -->
     <div class="flex-1 min-w-[300px] bg-white p-6 rounded-2xl shadow border border-gray-100">
       <div class="flex justify-between items-center mb-3">
         <h3 class="text-lg font-semibold">📅 Daily Log Trend</h3>
@@ -108,7 +93,6 @@
       <canvas id="trendChart" height="100"></canvas>
     </div>
 
-    <!-- Hourly Anomalies Heatmap -->
     <div class="flex-1 min-w-[300px] bg-white p-6 rounded-2xl shadow border border-gray-100">
       <div class="flex justify-between items-center mb-3">
         <h3 class="text-lg font-semibold">🔥 Anomalies by Hour</h3>
@@ -119,7 +103,6 @@
       <canvas id="hourChart" height="100"></canvas>
     </div>
 
-    <!-- Pie Chart for Levels -->
     <div class="flex-1 min-w-[300px] bg-white p-6 rounded-2xl shadow border border-gray-100">
       <div class="flex justify-between items-center mb-3">
         <h3 class="text-lg font-semibold">🥧 Log Level Distribution</h3>
@@ -131,102 +114,9 @@
     </div>
   </div>
 
-  <!-- Chart.js CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-  <script>
-    // Line Chart – Logs over Time
-    const trendCtx = document.getElementById('trendChart').getContext('2d');
-    new Chart(trendCtx, {
-      type: 'line',
-      data: {
-        labels: {{ date_labels|safe }},
-        datasets: [{
-          label: 'Logs per Day',
-          data: {{ date_data|safe }},
-          borderColor: '#3b82f6',
-          backgroundColor: 'rgba(59, 130, 246, 0.1)',
-          fill: true,
-          tension: 0.4,
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: { display: false }
-        }
-      }
-    });
-
-    // Bar Chart – Anomalies per Hour
-    const hourCtx = document.getElementById('hourChart').getContext('2d');
-    new Chart(hourCtx, {
-      type: 'bar',
-      data: {
-        labels: {{ hour_labels|safe }},
-        datasets: [{
-          label: 'Anomalies',
-          data: {{ hour_data|safe }},
-          backgroundColor: 'rgba(239, 68, 68, 0.7)',
-          borderRadius: 4,
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: { display: false }
-        },
-        scales: {
-          y: {
-            beginAtZero: true,
-            ticks: {
-              stepSize: 1
-            }
-          }
-        }
-      }
-    });
-
-    // Pie Chart – Level Distribution
-    const pieCtx = document.getElementById('levelPieChart').getContext('2d');
-    new Chart(pieCtx, {
-      type: 'pie',
-      data: {
-        labels: {{ level_labels|safe }},
-        datasets: [{
-          data: {{ level_data|safe }},
-          backgroundColor: [
-            '#ef4444', // CRITICAL - Red
-            '#f59e0b', // ERROR - Orange
-            '#7c3aed', // WARNING - Violet
-            '#10b981', // INFO - Green
-            '#3b82f6', // DEBUG - Blue
-          ],
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: {
-            position: 'bottom'
-          }
-        }
-      }
-    });
-
-    // Export chart function
-    function downloadChart(canvasId, filename) {
-      const canvas = document.getElementById(canvasId);
-      const a = document.createElement('a');
-      a.download = filename + '.png';
-      a.href = canvas.toDataURL('image/png');
-      a.click();
-    }
-  </script>
-
   <!-- Real-time Logs Section -->
-  <div id="realtime-logs" class="space-y-2">
-    <h3 class="text-lg font-semibold">🥧 Real-time Logs</h3>
+  <div id="realtime-logs" class="space-y-2 mt-10">
+    <h3 class="text-lg font-semibold">📡 Real-time Logs</h3>
     {% for log in recent_logs %}
       <div class="p-4 rounded shadow {% if log.is_anomaly %}bg-red-100{% else %}bg-white{% endif %}">
         <div class="text-sm text-gray-500">{{ log.timestamp }}</div>
@@ -236,20 +126,84 @@
       </div>
     {% endfor %}
   </div>
-
-  <script>
-    const socket = new WebSocket("ws://" + window.location.hostname + ":8000/ws/logs/");
-    socket.onmessage = function(e) {
-      const data = JSON.parse(e.data);
-      const container = document.getElementById("realtime-logs");
-      const logCard = `
-        <div class="border p-2 mb-2 rounded bg-red-100 shadow">
-            <strong>${data.level}</strong> — ${data.message} <br>
-            <small>${data.timestamp}</small>
-        </div>
-      `;
-      container.innerHTML = logCard + container.innerHTML; // prepend
-    }
-  </script>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  // Line Chart
+  const trendCtx = document.getElementById('trendChart').getContext('2d');
+  new Chart(trendCtx, {
+    type: 'line',
+    data: {
+      labels: {{ date_labels|safe }},
+      datasets: [{
+        label: 'Logs per Day',
+        data: {{ date_data|safe }},
+        borderColor: '#3b82f6',
+        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+        fill: true,
+        tension: 0.4,
+      }]
+    },
+    options: { responsive: true, plugins: { legend: { display: false } } }
+  });
+
+  // Bar Chart
+  const hourCtx = document.getElementById('hourChart').getContext('2d');
+  new Chart(hourCtx, {
+    type: 'bar',
+    data: {
+      labels: {{ hour_labels|safe }},
+      datasets: [{
+        label: 'Anomalies',
+        data: {{ hour_data|safe }},
+        backgroundColor: 'rgba(239, 68, 68, 0.7)',
+        borderRadius: 4,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+    }
+  });
+
+  // Pie Chart
+  const pieCtx = document.getElementById('levelPieChart').getContext('2d');
+  new Chart(pieCtx, {
+    type: 'pie',
+    data: {
+      labels: {{ level_labels|safe }},
+      datasets: [{
+        data: {{ level_data|safe }},
+        backgroundColor: ['#ef4444', '#f59e0b', '#7c3aed', '#10b981', '#3b82f6'],
+      }]
+    },
+    options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+  });
+
+  // Export chart
+  function downloadChart(canvasId, filename) {
+    const canvas = document.getElementById(canvasId);
+    const a = document.createElement('a');
+    a.download = filename + '.png';
+    a.href = canvas.toDataURL('image/png');
+    a.click();
+  }
+
+  // WebSocket
+  const socket = new WebSocket("ws://" + window.location.hostname + ":8000/ws/logs/");
+  socket.onmessage = function(e) {
+    const data = JSON.parse(e.data);
+    const container = document.getElementById("realtime-logs");
+    const logCard = `
+      <div class="border p-2 mb-2 rounded bg-red-100 shadow">
+        <strong>${data.level}</strong> — ${data.message} <br>
+        <small>${data.timestamp}</small>
+      </div>`;
+    container.innerHTML = logCard + container.innerHTML;
+  }
+</script>
 {% endblock %}

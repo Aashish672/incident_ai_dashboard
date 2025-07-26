@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Profile | Incident AI{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto p-6">
+  <h2 class="text-2xl font-bold mb-4">👤 Profile</h2>
+
+  <div class="bg-white p-6 rounded-xl shadow">
+    <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div>
+        <dt class="text-sm text-gray-500">Username</dt>
+        <dd class="text-lg font-semibold text-gray-800">{{ user.username }}</dd>
+      </div>
+
+      <div>
+        <dt class="text-sm text-gray-500">Email</dt>
+        <dd class="text-lg font-semibold text-gray-800">{{ user.email|default:"—" }}</dd>
+      </div>
+
+      <div>
+        <dt class="text-sm text-gray-500">Role</dt>
+        <dd class="text-lg font-semibold text-gray-800">
+          {% if profile and profile.role %}{{ profile.role|title }}{% else %}Viewer{% endif %}
+        </dd>
+      </div>
+
+      <div>
+        <dt class="text-sm text-gray-500">Last login</dt>
+        <dd class="text-lg font-semibold text-gray-800">
+          {{ user.last_login|date:"Y-m-d H:i:s" }}
+        </dd>
+      </div>
+
+      <div>
+        <dt class="text-sm text-gray-500">Joined on</dt>
+        <dd class="text-lg font-semibold text-gray-800">{{ user.date_joined|date:"Y-m-d H:i:s" }}</dd>
+      </div>
+    </dl>
+
+    <div class="mt-6">
+      <a href="{% url 'password_change' %}"
+         class="inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+        Change Password
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}
