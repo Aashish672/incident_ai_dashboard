@@ -58,54 +58,39 @@
 
   <hr class="my-6">
 
-  <!-- Log Cards -->
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-    {% for log in page_obj %}
-      <div class="bg-white shadow-md rounded-2xl p-4 border-l-4
-        {% if log.level == 'CRITICAL' %}border-red-600
-        {% elif log.level == 'ERROR' %}border-red-500
-        {% elif log.level == 'WARNING' %}border-yellow-400
-        {% elif log.level == 'INFO' %}border-blue-400
-        {% else %}border-gray-300{% endif %}">
-
-        <div class="flex justify-between items-center mb-2">
-          <span class="text-sm font-semibold uppercase text-gray-600">{{ log.level }}</span>
-          <span class="text-xs text-gray-500">{{ log.timestamp|date:"Y-m-d H:i:s" }}</span>
-        </div>
-
-        <a href="{% url 'logs:log_detail' log.id %}" class="font-medium text-blue-600 hover:underline">
-          {{ log.message|truncatechars:80 }}
-        </a>
-
-        <div class="flex justify-between items-center mt-2">
-          <span class="text-sm text-gray-500 italic">Source: {{ log.source }}</span>
-          {% if log.is_anomaly %}
-            <span class="bg-red-100 text-red-700 text-xs px-2 py-1 rounded-full font-bold">
-              Anomaly
-            </span>
-          {% endif %}
-        </div>
-      </div>
-    {% empty %}
-      <p class="text-gray-600">No logs found for the selected filters.</p>
-    {% endfor %}
-  </div>
-
-  <!-- Pagination -->
-  <div class="mt-6 flex justify-center space-x-2">
-    {% if page_obj.has_previous %}
-      <a href="?{% if request.GET %}{{ request.GET.urlencode }}&{% endif %}page={{ page_obj.previous_page_number }}"
-         class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 text-sm">Previous</a>
-    {% endif %}
-
-    <span class="px-4 py-2 bg-blue-500 text-white rounded text-sm">
-      Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
-    </span>
-
-    {% if page_obj.has_next %}
-      <a href="?{% if request.GET %}{{ request.GET.urlencode }}&{% endif %}page={{ page_obj.next_page_number }}"
-         class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 text-sm">Next</a>
-    {% endif %}
+  <div id="log-list-container">
+    {% include "_log_list_partial.html" %}
   </div>
 </div>
+
+<script>
+  function fetchLogs(url) {
+    fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+      .then(response => response.text())
+      .then(data => {
+        document.getElementById('log-list-container').innerHTML = data;
+      });
+  }
+
+  // Handle pagination clicks dynamically
+  document.addEventListener('click', function(e) {
+    if (e.target.closest('#log-list-container a')) {
+      e.preventDefault();
+      fetchLogs(e.target.closest('#log-list-container a').href);
+    }
+  });
+
+  // Live search (debounced)
+  let searchInput = document.querySelector('input[name="search"]');
+  let debounceTimeout;
+  if (searchInput) {
+    searchInput.addEventListener('input', function() {
+      clearTimeout(debounceTimeout);
+      debounceTimeout = setTimeout(() => {
+        let form = searchInput.closest('form');
+        fetchLogs(form.action + '?' + new URLSearchParams(new FormData(form)));
+      }, 500);
+    });
+  }
+</script>
 {% endblock %}

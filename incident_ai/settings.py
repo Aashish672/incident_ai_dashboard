@@ -76,6 +76,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'logs.context_processors.notification_count',
             ],
         },
     },
@@ -146,5 +147,5 @@ CHANNEL_LAYERS = {
     }
 }
 LOGIN_REDIRECT_URL = '/logs/dashboard/'
-LOGOUT_REDIRECT_URL='/landing/'
+LOGOUT_REDIRECT_URL='/'
 LOGIN_URL='/login/'

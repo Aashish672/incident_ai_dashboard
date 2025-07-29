@@ -35,6 +35,12 @@
     <a href="{% url 'logs:export_anomalies' %}" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 mt-6">
       ⬇️ Download Anomalies (CSV)
     </a>
+    <a href="{% url 'logs:export_dashboard_pdf' %}" 
+   class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
+    📄 Export Dashboard as PDF
+</a>
+
+
     <a href="{% url 'logs:log_list' %}" class="px-4 py-2 bg-indigo-600 text-white rounded-lg shadow hover:bg-indigo-700 transition mt-6">
       ← Back to Logs
     </a>
@@ -204,6 +210,13 @@
         <small>${data.timestamp}</small>
       </div>`;
     container.innerHTML = logCard + container.innerHTML;
+  
   }
+  function prepareChartsForPDF() {
+  const chartCanvas = document.getElementById('logChart');
+  const chartImage = chartCanvas.toDataURL('image/png');
+  document.getElementById('chartImage').value = chartImage;
+}
+
 </script>
 {% endblock %}

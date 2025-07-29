@@ -78,6 +78,7 @@ urlpatterns = [
 
          #Profile
          path('profile/',log_views.profile_view,name='profile'),
+         path('profile/edit/',log_views.profile_edit,name='profile_edit'),
     # Your app urls under /logs/
     path('', log_views.landing_page, name='landing'),
     path('logs/', include('logs.urls')),

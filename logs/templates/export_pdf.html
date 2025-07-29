@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Incident Dashboard Report</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #fff;
+            padding: 20px;
+            color: #333;
+        }
+        h1, h2 {
+            text-align: center;
+        }
+        .summary-cards {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .card {
+            flex: 1;
+            background: #f9f9f9;
+            padding: 15px;
+            margin: 5px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #ddd;
+        }
+        .chart {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .chart img {
+            max-width: 600px;
+            width: 100%;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        table, th, td {
+            border: 1px solid #ccc;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background: #f1f1f1;
+        }
+    </style>
+</head>
+<body>
+    <h1>Incident AI Dashboard Report</h1>
+    <h2>{{ report_date|default:"Generated Report" }}</h2>
+
+    <!-- Summary Cards -->
+    <div class="summary-cards">
+        <div class="card">
+            <h3>Total Logs</h3>
+            <p style="font-size: 24px; font-weight: bold;">{{ total_logs }}</p>
+        </div>
+        <div class="card">
+            <h3>Total Anomalies</h3>
+            <p style="font-size: 24px; font-weight: bold; color: red;">{{ total_anomalies }}</p>
+        </div>
+        <div class="card">
+            <h3>Levels</h3>
+            <ul style="list-style: none; padding: 0;">
+                {% for level, count in level_counts.items %}
+                    <li><strong>{{ level }}</strong>: {{ count }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="chart">
+        <h3>Log Levels Chart</h3>
+        <img src="{{ chart_image }}" alt="Log Level Chart">
+    </div>
+
+    <!-- Log Table -->
+    <h3>Recent Logs</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Timestamp</th>
+                <th>Level</th>
+                <th>Source</th>
+                <th>Message</th>
+                <th>Anomaly</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for log in logs %}
+            <tr>
+                <td>{{ log.timestamp|date:"Y-m-d H:i" }}</td>
+                <td>{{ log.level }}</td>
+                <td>{{ log.source }}</td>
+                <td>{{ log.message|truncatewords:10 }}</td>
+                <td>{{ log.is_anomaly|yesno:"Yes,No" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

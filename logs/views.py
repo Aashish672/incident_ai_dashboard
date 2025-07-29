@@ -24,7 +24,20 @@ from .models import LogEntry
 from .forms import LogUploadForm
 from scripts.log_processor import run
 from datetime import datetime
+from .forms import UserUpdateForm
 from .forms import CustomUserCreationForm
+
+
+from django.template.loader import render_to_string
+from django.http import HttpResponse
+from weasyprint import HTML
+import tempfile
+import base64
+from django.utils.timezone import now
+import matplotlib.pyplot as plt
+from .models import Notification
+
+from django.views.decorators.http import require_POST
 
 @login_required
 #@admin_required
@@ -73,7 +86,10 @@ def upload_logs(request):
                             },
                         }
                     )
-
+                    Notification.objects.create(
+                        user=request.user,
+                        message=f"Anomally detected in log: {log.message[:50]}..."
+                    )
             # Run anomaly detection pipeline
             run()
             messages.success(request, f"Uploaded {len(logs)} logs. Anomalies: {sum(l.is_anomaly for l in logs)}")
@@ -89,23 +105,13 @@ def upload_logs(request):
 
 @login_required
 def log_list(request):
-    
-    if request.user.profile.role=='admin':
-        logs=LogEntry.objects.all().order_by('-timestamp')
-    else:
-        logs=LogEntry.objects.filter(user=request.user).order_by('-timestamp')
-    level = request.GET.get('level')
-    show_anomalies = request.GET.get('anomaly') == 'true'
-    start_date = request.GET.get('start')
-    end_date = request.GET.get('end')
-    search_query = request.GET.get('search', '').strip()
+    logs = LogEntry.objects.all().order_by('-timestamp')
 
-    if show_anomalies:
-        logs = logs.filter(is_anomaly=True)
+    # Filters
+    level = request.GET.get('level')
+    search_query = request.GET.get('search', '').strip()
     if level:
         logs = logs.filter(level=level)
-    if start_date and end_date:
-        logs = logs.filter(timestamp__range=[start_date, end_date])
     if search_query:
         logs = logs.filter(Q(message__icontains=search_query) | Q(source__icontains=search_query))
 
@@ -113,14 +119,16 @@ def log_list(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
-    return render(request, 'log_list.html', {
+    context = {
         'page_obj': page_obj,
-        'show_anomalies': show_anomalies,
         'level': level,
-        'start': start_date,
-        'end': end_date,
-        'search_query': search_query,
-    })
+        'search': search_query,
+    }
+
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        return render(request, '_log_list_partial.html', context)
+
+    return render(request, 'log_list.html', context)
 
 
 def export_logs_csv(request):
@@ -245,7 +253,93 @@ def landing_page(request):
 @login_required
 def profile_view(request):
     profile=getattr(request.user,'profile',None)
+
+    logs_count=LogEntry.objects.filter(user=request.user).count()
+    anomalies_count=LogEntry.objects.filter(user=request.user,is_anomaly=True)
+    recent_logs=LogEntry.objects.filter(user=request.user).order_by('-timestamp')[:5]
     return render(request,'auth/profile.html',{
         'user':request.user,
         'profile':profile,
+        'logs_count':logs_count,
+        'anomalies_count':anomalies_count,
+        'recent_logs':recent_logs,
     })
+
+
+@login_required
+def profile_edit(request):
+    if request.method=='POST':
+        form=UserUpdateForm(request.POST,instance=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request,"Your profile has been updated.")
+            return redirect('profile')
+        
+    else:
+        form=UserUpdateForm(instance=request.user)
+
+    return render(request,'auth/profile_edit.html',{
+        'form':form
+    })
+
+@login_required
+def export_dashboard_pdf(request):
+    if request.user.profile.role == 'admin':
+        log_qs = LogEntry.objects.all().order_by('-timestamp')
+    else:
+        log_qs = LogEntry.objects.filter(user=request.user).order_by('-timestamp')
+
+    # Use log_qs for count/aggregation
+    total_logs = log_qs.count()
+    total_anomalies = log_qs.filter(is_anomaly=True).count()
+    level_counts_qs = log_qs.values('level').annotate(count=Count('level'))
+    level_counts = {row['level']: row['count'] for row in level_counts_qs}
+
+    # Always assign logs
+    logs = log_qs[:20]
+    # Create a chart (bar chart for log levels)
+    plt.figure(figsize=(6, 3))
+    plt.bar(level_counts.keys(), level_counts.values(), color='skyblue')
+    plt.title('Log Levels Distribution')
+    plt.tight_layout()
+
+    # Save chart to memory and convert to base64
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png')
+    buf.seek(0)
+    chart_image = base64.b64encode(buf.read()).decode('utf-8')
+    plt.close()
+
+    # Render HTML for PDF
+    html_content = render_to_string('export_pdf.html', {
+        'total_logs': total_logs,
+        'total_anomalies': total_anomalies,
+        'level_counts': level_counts,
+        'logs': logs,
+        'report_date': now().strftime("%Y-%m-%d %H:%M"),
+        'chart_image': f"data:image/png;base64,{chart_image}",
+    })
+
+    # Generate PDF using WeasyPrint
+    pdf_file = HTML(string=html_content).write_pdf()
+
+    # Return response
+    response = HttpResponse(pdf_file, content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="incident_report.pdf"'
+    return response
+
+
+@login_required
+def notification_list(request):
+    notifications=request.user.notifications.order_by('-created_at')
+
+    notifications.update(is_read=True)
+
+    return render(request,'notifications.html',{'notifications':notifications})
+
+@login_required
+@require_POST
+def mark_all_read(request):
+    request.user.notifications.filter(is_read=False).update(is_read=True)
+    messages.success(request,"All notifications marked as read.")
+    return redirect('logs:notifications')
