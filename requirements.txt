@@ -20,3 +20,6 @@ scikit-learn>=1.4
 
 # Dev tools
 python-dotenv>=1.0
+whitenoise
+weasyprint
+psycopg2-binary

@@ -1,9 +1,11 @@
 {% extends "base.html" %}
 {% block title %}Logs | Incident AI{% endblock %}
 
+
 {% block content %}
 <div class="max-w-7xl mx-auto py-8 px-4">
   <h2 class="text-3xl font-extrabold text-gray-800 mb-6">📊 Log Entries</h2>
+
 
   <!-- Filter Form -->
   <form method="get" class="grid grid-cols-1 md:grid-cols-6 gap-4 mb-6 bg-white p-4 rounded-lg shadow">
@@ -16,24 +18,29 @@
       <option value="DEBUG" {% if level == 'DEBUG' %}selected{% endif %}>DEBUG</option>
     </select>
 
+
     <label class="flex items-center space-x-2">
       <input type="checkbox" name="anomaly" value="true" class="form-checkbox text-red-500"
              {% if show_anomalies %}checked{% endif %}>
       <span class="text-gray-700">Anomalies Only</span>
     </label>
 
+
     <input type="date" name="start" value="{{ start }}" class="p-2 border border-gray-300 rounded-lg" />
     <input type="date" name="end" value="{{ end }}" class="p-2 border border-gray-300 rounded-lg" />
+
 
     <input type="text" name="search" value="{{ search_query }}"
            placeholder="Search message or source"
            class="p-2 border border-gray-300 rounded-lg col-span-1 md:col-span-2" />
+
 
     <button type="submit"
             class="p-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition duration-200">
       Apply Filters
     </button>
   </form>
+
 
   <!-- Buttons -->
   <div class="flex flex-col sm:flex-row sm:space-x-4 space-y-4 sm:space-y-0 mb-6">
@@ -47,21 +54,26 @@
       </button>
     </form>
 
+
     <a href="{% url 'logs:dashboard' %}" class="px-4 py-2 bg-indigo-600 text-white rounded-lg shadow hover:bg-indigo-700 transition">
       ← Go to Dashboard
     </a>
+
 
     <a href="{% url 'logs:upload_logs' %}" class="px-4 py-2 bg-purple-600 text-white rounded-lg shadow hover:bg-purple-700 transition">
       ⬆️ Upload Logs
     </a>
   </div>
 
+
   <hr class="my-6">
+
 
   <div id="log-list-container">
     {% include "_log_list_partial.html" %}
   </div>
 </div>
+
 
 <script>
   function fetchLogs(url) {
@@ -72,6 +84,7 @@
       });
   }
 
+
   // Handle pagination clicks dynamically
   document.addEventListener('click', function(e) {
     if (e.target.closest('#log-list-container a')) {
@@ -79,6 +92,7 @@
       fetchLogs(e.target.closest('#log-list-container a').href);
     }
   });
+
 
   // Live search (debounced)
   let searchInput = document.querySelector('input[name="search"]');

@@ -1,92 +1,112 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>{% block title %}Incident AI Dashboard{% endblock %}</title>
+
+  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet" />
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #0f172a; /* Tailwind slate-900 */
+      color: #e5e7eb; /* Tailwind gray-200 */
+      min-height: 100vh;
+    }
+
+    /* Customize selection color */
+    ::selection {
+      background-color: rgb(59 130 246 / 0.3); /* blue-500 at 30% */
+      color: white;
+    }
+  </style>
+
   {% block extra_head %}{% endblock %}
 </head>
-<body class="bg-gray-50 text-gray-900 min-h-screen flex flex-col">
+<body class="flex flex-col min-h-screen">
 
   <!-- Navbar -->
-  <nav class="bg-white border-b border-gray-200">
+  <nav class="top-4 inset-x-4 z-50 max-w-7xl mx-auto bg-slate-800/60 backdrop-blur-lg border border-slate-700 rounded-xl shadow-lg shadow-blue-900/40">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex h-16 items-center justify-between">
+
+        <!-- Branding - top-left -->
         <div class="flex items-center space-x-3">
-          <a href="{% url 'landing' %}" class="text-lg font-bold text-gray-800">
+          <a href="{% url 'landing' %}" class="text-2xl font-extrabold text-white tracking-wide hover:text-blue-400 transition-colors duration-300 select-none">
             Incident AI
           </a>
         </div>
 
-        <div class="flex items-center space-x-4">
+        <!-- Right-side navigation & buttons -->
+        <div class="flex items-center space-x-5 text-gray-300 text-sm font-medium">
+
           {% if user.is_authenticated %}
-            <a href="{% url 'profile' %}" class="text-sm text-gray-700 hover:text-blue-600">Profile</a>
-            <a href="{% url 'password_change' %}" class="text-sm text-gray-700 hover:text-blue-600">Change Password</a>
+            <a href="{% url 'logs:dashboard' %}" class="hover:text-white transition-colors duration-300">Dashboard</a>
+            <a href="{% url 'logs:log_list' %}" class="hover:text-white transition-colors duration-300">Logs</a>
+            <a href="{% url 'logs:upload_logs' %}" class="hover:text-white transition-colors duration-300">Upload</a>
 
-            <span class="hidden sm:inline text-sm text-gray-600">
-              Hi, <span class="font-semibold">{{ user.username }}</span>
-              {% if user.profile and user.profile.role %}
-                ({{ user.profile.role|title }})
-              {% else %}
-                (Viewer)
-              {% endif %}
-            </span>
-
-            <a href="{% url 'logs:dashboard' %}" class="text-sm text-gray-700 hover:text-blue-600">Dashboard</a>
-            <a href="{% url 'logs:log_list' %}" class="text-sm text-gray-700 hover:text-blue-600">Logs</a>
-            <a href="{% url 'logs:upload_logs' %}" class="text-sm text-gray-700 hover:text-blue-600">Upload</a>
-
-            <!-- 🔔 Bell Icon -->
-            <a href="{% url 'logs:notifications' %}" class="relative text-gray-700 hover:text-blue-600 text-sm">
-              🔔
-              {% if unread_count > 0 %}
-                <span class="absolute -top-2 -right-2 bg-red-600 text-white text-xs rounded-full px-1.5 py-0.5">
+            <a href="{% url 'logs:notifications' %}" class="relative hover:text-white transition-colors duration-300" aria-label="Notifications">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+              </svg>
+              {% if unread_count and unread_count > 0 %}
+                <span class="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center bg-red-500 text-white text-xs rounded-full select-none">
                   {{ unread_count }}
                 </span>
               {% endif %}
             </a>
 
-            <!-- Logout button -->
+            <a href="{% url 'profile' %}" class="hover:text-white transition-colors duration-300 select-none">
+              Hi, <span class="font-semibold text-white">{{ user.username }}</span>
+            </a>
+
             <form method="post" action="{% url 'logout' %}" class="inline">
               {% csrf_token %}
-              <button type="submit"
-                      class="text-sm px-3 py-1.5 bg-red-600 text-white rounded hover:bg-red-700">
+              <button type="submit" class="ml-3 text-sm px-4 py-2 bg-red-600 rounded-lg hover:bg-red-700 transition-colors duration-300 text-white font-semibold select-none">
                 Logout
               </button>
             </form>
+
           {% else %}
-            <a href="{% url 'login' %}" class="text-sm px-3 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700">Login</a>
-            <a href="{% url 'register' %}" class="text-sm px-3 py-1.5 bg-green-600 text-white rounded hover:bg-green-700">Register</a>
+            <!-- No login/register here (buttons only on landing) -->
           {% endif %}
+
         </div>
       </div>
     </div>
   </nav>
 
-  <!-- Flash messages -->
+  <!-- Flash Messages -->
   {% if messages %}
-    <div class="max-w-4xl mx-auto mt-4 w-full px-4">
-      {% for message in messages %}
-        <div class="mb-3 rounded p-3 text-white
-                    {% if message.tags == 'error' %}bg-red-500
-                    {% elif message.tags == 'warning' %}bg-yellow-500
-                    {% elif message.tags == 'success' %}bg-green-500
-                    {% else %}bg-blue-500{% endif %}">
-          {{ message }}
-        </div>
-      {% endfor %}
-    </div>
+  <div class="max-w-4xl mx-auto mt-6 px-4 w-full z-50">
+    {% for message in messages %}
+      <div class="mb-3 rounded-lg p-4 font-medium border
+      {% if message.tags == 'error' %}bg-red-500/20 border-red-500/30 text-red-300
+      {% elif message.tags == 'warning' %}bg-yellow-500/20 border-yellow-500/30 text-yellow-300
+      {% elif message.tags == 'success' %}bg-green-500/20 border-green-500/30 text-green-300
+      {% else %}bg-blue-500/20 border-blue-500/30 text-blue-300{% endif %}">
+        {{ message }}
+      </div>
+    {% endfor %}
+  </div>
   {% endif %}
 
-  <!-- Page content -->
+  <!-- Main Content -->
   <main class="flex-1">
     {% block content %}{% endblock %}
   </main>
 
-  <footer class="bg-white border-t border-gray-200 mt-12">
-    <div class="max-w-7xl mx-auto px-4 py-4 text-center text-sm text-gray-500">
+  <!-- Footer -->
+  <footer class="bg-slate-900 border-t border-slate-800 mt-16">
+    <div class="max-w-7xl mx-auto px-4 py-6 text-center text-sm text-gray-500 select-none">
       &copy; {{ year|default:"2025" }} Incident AI — All rights reserved.
     </div>
   </footer>
