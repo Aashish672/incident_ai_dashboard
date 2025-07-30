@@ -30,9 +30,24 @@ class Profile(models.Model):
     ]
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='viewer')
+    admin = models.ForeignKey(
+        User,
+        null=True, blank=True,
+        on_delete=models.SET_NULL,
+        related_name='viewers',
+        limit_choices_to={'profile__role': 'admin'},
+        help_text="Assign the admin this viewer reports to",
+    )
 
     def __str__(self):
         return f"{self.user.username}-{self.role}"
+
+    def clean(self):
+        from django.core.exceptions import ValidationError
+        if self.role == "admin" and self.admin is not None:
+            raise ValidationError("Admins cannot have an admin assigned.")
+        if self.role == "viewer" and self.admin is None:
+            raise ValidationError("Viewers must be assigned to an admin.")
 
 class Notification(models.Model):
     user=models.ForeignKey(User,on_delete=models.CASCADE,related_name="notifications")

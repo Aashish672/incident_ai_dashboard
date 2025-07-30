@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import LogEntry
+from .models import LogEntry,Profile
+
 
 # Register your models here.
 
@@ -11,4 +12,8 @@ class LogEntryAdmin(admin.ModelAdmin):
     ordering = ('-timestamp',)  # 👈 Add this line
     #readonly_fields = ('timestamp', 'level', 'source', 'message', 'is_anomaly')
 
-
+@admin.register(Profile)
+class ProfileAdmin(admin.ModelAdmin):
+    list_display = ('user', 'role', 'admin')
+    list_filter = ('role',)
+    search_fields = ('user__username', 'admin__username')

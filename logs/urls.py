@@ -13,4 +13,5 @@ urlpatterns = [
     path('export/pdf/',views.export_dashboard_pdf,name='export_dashboard_pdf'),
     path('notifications/',views.notification_list,name='notifications'),
     path('notifications/mark-all-read/',views.mark_all_read,name='mark_all_read'),
+    #path('user-hierarchy/',views.user_hierarchy,name='user_hierarchy'),
 ]

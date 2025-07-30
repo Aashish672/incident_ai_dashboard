@@ -53,6 +53,35 @@
         {% endif %}
       </div>
 
+      <!-- Role selection -->
+      <div>
+        <label class="block text-gray-700 font-medium mb-1" for="id_role">Role</label>
+        <select name="role" id="id_role"
+                class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+          {% for value, label in form.role.field.choices %}
+            <option value="{{ value }}" {% if form.role.value == value %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+        {% if form.role.errors %}
+          <p class="text-red-500 text-sm mt-1">{{ form.role.errors.0 }}</p>
+        {% endif %}
+      </div>
+
+      <!-- Admin selection (hidden unless role is 'viewer') -->
+      <div id="admin-select-div" {% if form.role.value != "viewer" %}style="display:none"{% endif %}>
+        <label class="block text-gray-700 font-medium mb-1" for="id_admin">Assign Admin</label>
+        <select name="admin" id="id_admin"
+                class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+          <option value="">---------</option>
+          {% for admin in form.fields.admin.queryset %}
+            <option value="{{ admin.pk }}" {% if form.admin.value == admin.pk|stringformat:"s" %}selected{% endif %}>{{ admin.username }}</option>
+          {% endfor %}
+        </select>
+        {% if form.admin.errors %}
+          <p class="text-red-500 text-sm mt-1">{{ form.admin.errors.0 }}</p>
+        {% endif %}
+      </div>
+
       <!-- Register Button -->
       <button type="submit"
               class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 rounded-lg transition">
@@ -66,4 +95,23 @@
     </form>
   </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  var roleField = document.getElementById('id_role');
+  var adminDiv = document.getElementById('admin-select-div');
+
+  function toggleAdminField() {
+    if (roleField.value === 'viewer') {
+      adminDiv.style.display = '';
+    } else {
+      adminDiv.style.display = 'none';
+      document.getElementById('id_admin').selectedIndex = 0; // clear selection
+    }
+  }
+
+  roleField.addEventListener('change', toggleAdminField);
+  toggleAdminField(); // Initialize on page load
+});
+</script>
 {% endblock %}

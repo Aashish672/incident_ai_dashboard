@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}User Hierarchy | Incident AI{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto p-6">
+  <h1 class="text-3xl font-bold mb-6">Admins and their Viewers</h1>
+
+  {% if admins %}
+    <ul class="space-y-6">
+      {% for admin in admins %}
+        <li class="bg-white p-5 rounded-xl shadow">
+          <h2 class="text-xl font-semibold mb-2 flex items-center gap-2">
+            👤 {{ admin.username }}
+            <span class="px-2 py-1 rounded bg-green-100 text-green-700 text-xs font-semibold">Admin</span>
+          </h2>
+          {% if admin.viewers.all %}
+            <p class="mb-2 text-gray-600 text-sm">Viewers assigned:</p>
+            <ul class="list-disc list-inside text-gray-800">
+              {% for viewer in admin.viewers.all %}
+                <li>
+                  {{ viewer.username }} 
+                  <span class="px-1 py-0.5 rounded bg-gray-100 text-gray-700 text-xs font-semibold">Viewer</span>
+                </li>
+              {% empty %}
+                <li>No viewers assigned</li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p class="text-gray-500 italic">No viewers assigned</p>
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="text-gray-500 italic">No admins found.</p>
+  {% endif %}
+
+  <hr class="my-10 border-gray-300">
+
+  <h1 class="text-3xl font-bold mb-6">Viewers and their Assigned Admin</h1>
+
+  {% if viewers %}
+    <ul class="space-y-4">
+      {% for viewer in viewers %}
+        <li class="bg-white p-4 rounded-xl shadow flex justify-between items-center">
+          <div>
+            👤 {{ viewer.username }} 
+            <span class="px-2 py-1 rounded bg-gray-100 text-gray-700 text-xs font-semibold">Viewer</span>
+          </div>
+          <div class="text-sm text-gray-600">
+            Assigned Admin: 
+            {% if viewer.profile.admin %}
+              <strong>{{ viewer.profile.admin.username }}</strong>
+            {% else %}
+              <span class="italic text-red-500">None</span>
+            {% endif %}
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="text-gray-500 italic">No viewers found.</p>
+  {% endif %}
+</div>
+{% endblock %}

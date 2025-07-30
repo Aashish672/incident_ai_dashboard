@@ -1,11 +1,11 @@
 timestamp,level,message,source
-2025-07-23T09:14:00,ERROR,Disk read error on /dev/sda1,DiskMonitor
-2025-07-24T09:18:30,CRITICAL,CPU temperature exceeded safe limit,SystemHealth
-2025-07-25T09:25:00,ERROR,Application crashed unexpectedly,AppCore
-2025-07-26T09:30:45,CRITICAL,Database connection failure,DBService
-2025-07-27T09:33:15,ERROR,Failed to load configuration file,ConfigLoader
-2025-07-28T09:40:00,ERROR,File permission error detected,SecurityAgent
-2025-07-29T09:50:30,CRITICAL,Out of memory in main service,ServiceManager
-2025-07-23T10:00:00,ERROR,Uncaught exception in worker thread,WorkerPool
-2025-07-25T10:05:10,ERROR,Backup restoration failed due to checksum error,BackupService
-2025-07-26T10:10:45,CRITICAL,Multiple failed login attempts detected,AuthSystem
+2025-07-29T13:00:00,INFO,Service started successfully.,system
+2025-07-29T13:05:00,WARNING,Disk space running low.,system
+2025-07-29T13:10:00,ERROR,Failed to connect to database.,app
+2025-07-29T13:15:00,DEBUG,User login attempt.,security
+2025-07-29T13:20:00,CRITICAL,System overheating detected!,hardware
+2025-07-29T13:25:00,INFO,Background job completed.,app
+2025-07-29T13:30:00,ERROR,Unhandled exception in payment process.,app
+2025-07-29T13:35:00,WARNING,High memory usage observed.,system
+2025-07-29T13:40:00,INFO,New user registered.,app
+2025-07-29T13:45:00,DEBUG,Cache cleared successfully.,system

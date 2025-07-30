@@ -68,18 +68,18 @@
   </div>
 
   <!-- Recent Logs -->
-  <div class="bg-white p-6 rounded-xl shadow">
+  <div class="bg-white p-6 rounded-xl shadow mb-8">
     <h3 class="text-lg font-semibold mb-4">🕒 Recent Logs (last 5)</h3>
     {% if recent_logs %}
       <ul class="space-y-3">
         {% for log in recent_logs %}
           <li class="border rounded p-3 {% if log.is_anomaly %}bg-red-50{% endif %}">
-            <div class="flex justify-between items-center">
-              <span class="text-xs text-gray-500">{{ log.timestamp|date:"Y-m-d H:i:s" }}</span>
-              <span class="text-xs font-semibold text-gray-700">{{ log.level }}</span>
-            </div>
-            <div class="font-medium">{{ log.message|truncatechars:100 }}</div>
-            <div class="text-xs text-gray-500 italic">Source: {{ log.source }}</div>
+             <div class="flex justify-between items-center">
+               <span class="text-xs text-gray-500">{{ log.timestamp|date:"Y-m-d H:i:s" }}</span>
+               <span class="text-xs font-semibold text-gray-700">{{ log.level }}</span>
+             </div>
+             <div class="font-medium">{{ log.message|truncatechars:100 }}</div>
+             <div class="text-xs text-gray-500 italic">Source: {{ log.source }}</div>
           </li>
         {% endfor %}
       </ul>
@@ -87,5 +87,46 @@
       <p class="text-gray-500">You haven’t uploaded any logs yet.</p>
     {% endif %}
   </div>
+
+  <hr class="my-8 border-gray-300">
+
+  <!-- Admins and their Viewers -->
+  <hr class="my-8 border-gray-300">
+
+{% if profile and profile.role == "viewer" %}
+  <h2 class="text-2xl font-bold mb-4">Your Assigned Admin</h2>
+  <div class="bg-white p-4 rounded-xl shadow">
+    {% if admin %}
+      <div class="text-gray-800 font-medium">
+        👤 {{ admin.username }}
+        <span class="px-2 py-1 rounded bg-green-100 text-green-700 text-xs font-semibold">Admin</span>
+      </div>
+      <div class="mt-1 text-gray-500 text-sm">
+        Email: {{ admin.email|default:"—" }}
+      </div>
+    {% else %}
+      <p class="italic text-red-500">No admin assigned.</p>
+    {% endif %}
+  </div>
+{% elif profile and profile.role == "admin" %}
+  <h2 class="text-2xl font-bold mb-4">Viewers Assigned to You</h2>
+  <div class="bg-white p-4 rounded-xl shadow">
+    {% if assigned_viewers %}
+      <ul class="space-y-2">
+        {% for viewer in assigned_viewers %}
+  <li class="flex items-center gap-2">
+    👤 {{ viewer.user.username }}
+    <span class="px-2 py-1 rounded bg-gray-100 text-gray-700 text-xs font-semibold">Viewer</span>
+    <span class="text-sm text-gray-500"> ({{ viewer.user.email|default:"—" }}) </span>
+  </li>
+{% endfor %}
+
+      </ul>
+    {% else %}
+      <p class="italic text-gray-500">No viewers are assigned to you.</p>
+    {% endif %}
+  </div>
+{% endif %}
+
 </div>
 {% endblock %}

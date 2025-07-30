@@ -38,6 +38,7 @@ import matplotlib.pyplot as plt
 from .models import Notification
 
 from django.views.decorators.http import require_POST
+from django.contrib.auth.models import User
 
 @login_required
 #@admin_required
@@ -78,7 +79,7 @@ def upload_logs(request):
                     async_to_sync(channel_layer.group_send)(
                         "logs",
                         {
-                            "type": "send_log",
+                            "type": "send_alert",
                             "log": {
                                 "level": log.level,
                                 "message": log.message,
@@ -103,13 +104,29 @@ def upload_logs(request):
         'anomalies': anomalies,
     })
 
+
 @login_required
 def log_list(request):
-    logs = LogEntry.objects.all().order_by('-timestamp')
+    user = request.user
+    profile = user.profile
 
-    # Filters
+    if profile.role == 'admin':
+        viewer_users = User.objects.filter(profile__admin=user)
+        users_qs = Q(user=user) | Q(user__in=viewer_users)
+        logs = LogEntry.objects.filter(users_qs)
+    else:
+        logs = LogEntry.objects.filter(user=user)
+
+    # Order logs
+    logs = logs.order_by('-timestamp')
+
+    # Apply filters
     level = request.GET.get('level')
     search_query = request.GET.get('search', '').strip()
+    show_anomalies = request.GET.get('anomaly') == 'true'  # ✅ ADD THIS
+
+    if show_anomalies:
+        logs = logs.filter(is_anomaly=True)
     if level:
         logs = logs.filter(level=level)
     if search_query:
@@ -123,6 +140,7 @@ def log_list(request):
         'page_obj': page_obj,
         'level': level,
         'search': search_query,
+        'show_anomalies': show_anomalies,  # ✅ For checkbox state if needed
     }
 
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
@@ -130,9 +148,21 @@ def log_list(request):
 
     return render(request, 'log_list.html', context)
 
-
+@login_required
 def export_logs_csv(request):
-    logs = LogEntry.objects.all().order_by('-timestamp')
+    user = request.user
+    profile = user.profile
+
+    # Role-based visibility restriction
+    if profile.role == 'admin':
+        viewer_users = user.viewers.all()
+        logs = LogEntry.objects.filter(Q(user=user) | Q(user__in=viewer_users))
+    else:
+        logs = LogEntry.objects.filter(user=user)
+
+    logs = logs.order_by('-timestamp')
+
+    # Apply filters
     level = request.GET.get('level')
     show_anomalies = request.GET.get('anomaly') == 'true'
     start_date = request.GET.get('start')
@@ -163,18 +193,24 @@ def log_detail(request, pk):
 
 @login_required
 def dashboard_view(request):
+    user = request.user
+    profile = user.profile
+
+    # Role-based filtering of logs
+    if profile.role == 'admin':
+        # Admin sees own logs + viewers' logs
+        viewer_users = User.objects.filter(profile__admin=user)
+        logs = LogEntry.objects.filter(Q(user=user) | Q(user__in=viewer_users))
+    else:
+        # Viewer sees only own logs
+        logs = LogEntry.objects.filter(user=user)
+
     # Filters from query parameters
     start = request.GET.get('start')
     end = request.GET.get('end')
     show_anomalies = request.GET.get('anomaly') == 'true'
 
-    # Role-based filtering
-    if request.user.profile.role == 'admin':
-        logs = LogEntry.objects.all()
-    else:
-        logs = LogEntry.objects.filter(user=request.user)
-
-    # Date and anomaly filtering
+    # Apply additional filtering
     if start:
         logs = logs.filter(timestamp__date__gte=start)
     if end:
@@ -185,7 +221,7 @@ def dashboard_view(request):
     total_logs = logs.count()
     total_anomalies = logs.filter(is_anomaly=True).count()
 
-    # Level-wise aggregation for summary and charts
+    # Aggregation for level counts
     level_counts_qs = logs.values('level').annotate(count=Count('level'))
     level_counts = {row['level']: row['count'] for row in level_counts_qs}
     level_labels = list(level_counts.keys())
@@ -193,15 +229,15 @@ def dashboard_view(request):
 
     # Trend per day
     daily_logs = (logs.annotate(date=TruncDate('timestamp'))
-                      .values('date').annotate(count=Count('id')).order_by('date'))
+                  .values('date').annotate(count=Count('id')).order_by('date'))
     date_labels = [entry['date'].strftime('%Y-%m-%d') for entry in daily_logs]
     date_data = [entry['count'] for entry in daily_logs]
 
-    # Anomaly per hour (for heatmaps)
+    # Anomaly per hour for heatmap
     hourly_logs = (logs.filter(is_anomaly=True)
-                       .annotate(hour=ExtractHour('timestamp'))
-                       .values('hour').annotate(count=Count('id'))
-                       .order_by('hour'))
+                   .annotate(hour=ExtractHour('timestamp'))
+                   .values('hour').annotate(count=Count('id'))
+                   .order_by('hour'))
     hour_labels = list(range(24))
     hour_data = [0] * 24
     for row in hourly_logs:
@@ -224,46 +260,79 @@ def dashboard_view(request):
         'show_anomalies': show_anomalies,
         'recent_logs': recent_logs,
     }
-    return render(request, 'dashboard.html', context)
 
+    return render(request, 'dashboard.html', context)
+@login_required
 def export_anomalies_csv(request):
+    user = request.user
+    profile = user.profile
+
+    if profile.role == 'admin':
+        viewer_users = user.viewers.all()
+        anomalies = LogEntry.objects.filter(
+            Q(user=user) | Q(user__in=viewer_users),
+            is_anomaly=True,
+        ).order_by('-timestamp')
+    else:
+        anomalies = LogEntry.objects.filter(user=user, is_anomaly=True).order_by('-timestamp')
+
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment;filename="anomalies.csv"'
     writer = csv.writer(response)
     writer.writerow(['Timestamp', 'Level', 'Message', 'Source'])
-    anomalies = LogEntry.objects.filter(is_anomaly=True).order_by('-timestamp')
+
     for log in anomalies:
         writer.writerow([log.timestamp, log.level, log.message, log.source])
+
     return response
 
 
+
+from django.contrib.auth import login
+
 def register(request):
-    if request.method=='POST':
-        form=CustomUserCreationForm(request.POST)
+    if request.method == 'POST':
+        form = CustomUserCreationForm(request.POST)
         if form.is_valid():
-            form.save()
-            return redirect('login')
+            user = form.save()
+            #ogin(request, user)  # Log the user in
+            return redirect('login')  # Redirect to a dashboard or homepage
     else:
-        form=CustomUserCreationForm()
-    return render(request,'auth/register.html',{'form':form})
+        form = CustomUserCreationForm()
+    return render(request, 'auth/register.html', {'form': form})
 
 def landing_page(request):
     return render(request, 'landing.html')  # Your landing page template
 
 @login_required
 def profile_view(request):
-    profile=getattr(request.user,'profile',None)
+    profile = getattr(request.user, 'profile', None)
 
-    logs_count=LogEntry.objects.filter(user=request.user).count()
-    anomalies_count=LogEntry.objects.filter(user=request.user,is_anomaly=True)
-    recent_logs=LogEntry.objects.filter(user=request.user).order_by('-timestamp')[:5]
-    return render(request,'auth/profile.html',{
-        'user':request.user,
-        'profile':profile,
-        'logs_count':logs_count,
-        'anomalies_count':anomalies_count,
-        'recent_logs':recent_logs,
-    })
+    logs_count = LogEntry.objects.filter(user=request.user).count()
+    anomalies_count = LogEntry.objects.filter(user=request.user, is_anomaly=True).count()
+    recent_logs = LogEntry.objects.filter(user=request.user).order_by('-timestamp')[:5]
+
+    admin = None
+    assigned_viewers = []
+
+    if profile:
+        if profile.role == 'viewer':
+            # Assigned admin user for this viewer
+            admin = profile.admin
+        elif profile.role == 'admin':
+            # Users assigned to this admin (User queryset)
+            assigned_viewers = request.user.viewers.all()
+
+    context = {
+        'user': request.user,
+        'profile': profile,
+        'logs_count': logs_count,
+        'anomalies_count': anomalies_count,
+        'recent_logs': recent_logs,
+        'admin': admin,
+        'assigned_viewers': assigned_viewers,
+    }
+    return render(request, 'auth/profile.html', context)
 
 
 @login_required
@@ -284,10 +353,15 @@ def profile_edit(request):
 
 @login_required
 def export_dashboard_pdf(request):
-    if request.user.profile.role == 'admin':
-        log_qs = LogEntry.objects.all().order_by('-timestamp')
+    user = request.user
+    profile = user.profile
+
+    if profile.role == 'admin':
+        viewer_users = user.viewers.all()
+        log_qs = LogEntry.objects.filter(Q(user=user) | Q(user__in=viewer_users)).order_by('-timestamp')
     else:
-        log_qs = LogEntry.objects.filter(user=request.user).order_by('-timestamp')
+        log_qs = LogEntry.objects.filter(user=user).order_by('-timestamp')
+
 
     # Use log_qs for count/aggregation
     total_logs = log_qs.count()
@@ -343,3 +417,17 @@ def mark_all_read(request):
     request.user.notifications.filter(is_read=False).update(is_read=True)
     messages.success(request,"All notifications marked as read.")
     return redirect('logs:notifications')
+
+@login_required
+def user_hierarchy(request):
+    # Get all admins with their viewers, prefetch for efficiency
+    admins = User.objects.filter(profile__role='admin').prefetch_related('viewers')
+
+    # Get all viewers with their admin (select_related for better performance)
+    viewers = User.objects.filter(profile__role='viewer').select_related('profile__admin')
+
+    context = {
+        'admins': admins,
+        'viewers': viewers,
+    }
+    return render(request, 'user_hierarchy.html', context)
