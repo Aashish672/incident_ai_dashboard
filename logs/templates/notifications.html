@@ -22,7 +22,7 @@
     <p class="text-gray-600">No notifications yet.</p>
   {% endfor %}
 </ul>
-<form method="post" action="{% url 'logs:mark_all_read' %}">
+<form method="post" action="{% url 'logs:notifications' %}">
         {% csrf_token %}
          <button type="submit" class="text-blue-600 hover:underline">Mark all as read</button>
         </form>

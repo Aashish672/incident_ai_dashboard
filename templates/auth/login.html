@@ -2,6 +2,23 @@
 {% block title %}Login | Incident AI{% endblock %}
 
 {% block content %}
+
+<style>
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  input:-webkit-autofill:active {
+    /* Set the text color */
+    -webkit-text-fill-color: #1f2937 !important; /* text-gray-800 */
+    
+    /* Force a transparent background instead of the browser's default blue */
+    -webkit-box-shadow: 0 0 0px 1000px #fff inset !important;
+    
+    /* Optional: Smooth transition */
+    transition: background-color 5000s ease-in-out 0s;
+  }
+</style>
+
 <div class="min-h-[calc(100vh-10rem)] flex items-center justify-center px-4">
   <div class="w-full max-w-md bg-white rounded-xl shadow-lg p-8">
     <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">🔐 Login</h2>
@@ -12,7 +29,7 @@
       <div>
         <label class="block text-gray-700 font-medium mb-1" for="id_username">Username</label>
         <input type="text" name="username" id="id_username" autocomplete="username"
-               class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+               class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-gray-900"
                placeholder="Enter your username">
         {% if form.username.errors %}
           <p class="text-red-500 text-sm mt-1">{{ form.username.errors.0 }}</p>
@@ -22,7 +39,7 @@
       <div>
         <label class="block text-gray-700 font-medium mb-1" for="id_password">Password</label>
         <input type="password" name="password" id="id_password" autocomplete="current-password"
-               class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+               class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-gray-900"
                placeholder="Enter your password">
         {% if form.password.errors %}
           <p class="text-red-500 text-sm mt-1">{{ form.password.errors.0 }}</p>

@@ -1,110 +1,119 @@
 {% extends "base.html" %}
 {% block title %}Logs | Incident AI{% endblock %}
 
-
 {% block content %}
 <div class="max-w-7xl mx-auto py-8 px-4">
-  <h2 class="text-3xl font-extrabold text-gray-800 mb-6">📊 Log Entries</h2>
+    <h2 class="text-3xl font-extrabold text-gray-100 mb-6">📊 Log Entries</h2>
 
+    <div class="bg-slate-800 border border-slate-700 rounded-xl p-4 mb-6 shadow-lg">
+        <form id="filter-form" method="get" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 items-center">
+            
+            <select name="level" class="col-span-1 bg-slate-700 border border-slate-600 text-gray-200 p-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                <option value="">All Levels</option>
+                <option value="INFO" {% if request.GET.level == 'INFO' %}selected{% endif %}>INFO</option>
+                <option value="WARNING" {% if request.GET.level == 'WARNING' %}selected{% endif %}>WARNING</option>
+                <option value="ERROR" {% if request.GET.level == 'ERROR' %}selected{% endif %}>ERROR</option>
+                <option value="CRITICAL" {% if request.GET.level == 'CRITICAL' %}selected{% endif %}>CRITICAL</option>
+                <option value="DEBUG" {% if request.GET.level == 'DEBUG' %}selected{% endif %}>DEBUG</option>
+            </select>
 
-  <!-- Filter Form -->
-  <form method="get" class="grid grid-cols-1 md:grid-cols-6 gap-4 mb-6 bg-white p-4 rounded-lg shadow">
-    <select name="level" class="p-2 border border-gray-300 rounded-lg">
-      <option value="">All Levels</option>
-      <option value="INFO" {% if level == 'INFO' %}selected{% endif %}>INFO</option>
-      <option value="WARNING" {% if level == 'WARNING' %}selected{% endif %}>WARNING</option>
-      <option value="ERROR" {% if level == 'ERROR' %}selected{% endif %}>ERROR</option>
-      <option value="CRITICAL" {% if level == 'CRITICAL' %}selected{% endif %}>CRITICAL</option>
-      <option value="DEBUG" {% if level == 'DEBUG' %}selected{% endif %}>DEBUG</option>
-    </select>
+            <div class="col-span-1 grid grid-cols-2 gap-4">
+                <input type="date" name="start_date" value="{{ request.GET.start_date }}" class="bg-slate-700 border border-slate-600 text-gray-400 p-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+                <input type="date" name="end_date" value="{{ request.GET.end_date }}" class="bg-slate-700 border border-slate-600 text-gray-400 p-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+            </div>
 
+            <input type="text" name="search" value="{{ request.GET.search }}" placeholder="Search message or source" class="col-span-1 sm:col-span-2 md:col-span-1 bg-slate-700 border border-slate-600 text-gray-200 p-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+            
+            <label class="col-span-1 flex items-center justify-start space-x-2">
+                <input type="checkbox" name="anomaly" value="true" class="form-checkbox h-5 w-5 bg-slate-700 border-slate-600 rounded text-red-500 focus:ring-red-500" {% if request.GET.anomaly %}checked{% endif %}>
+                <span class="text-gray-300 font-medium">Anomalies Only</span>
+            </label>
 
-    <label class="flex items-center space-x-2">
-      <input type="checkbox" name="anomaly" value="true" class="form-checkbox text-red-500"
-             {% if show_anomalies %}checked{% endif %}>
-      <span class="text-gray-700">Anomalies Only</span>
-    </label>
+            <button type="submit" class="col-span-1 p-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition duration-200">
+                Apply Filters
+            </button>
+        </form>
+    </div>
 
+    <div class="flex items-center mb-6">
+        <form id="export-form" method="get" action="{% url 'logs:export_logs_csv' %}" class="w-full sm:w-auto">
+            <input type="hidden" name="level" value="{{ request.GET.level }}">
+            <input type="hidden" name="anomaly" value="{{ request.GET.anomaly }}">
+            <input type="hidden" name="start_date" value="{{ request.GET.start_date }}">
+            <input type="hidden" name="end_date" value="{{ request.GET.end_date }}">
+            <input type="hidden" name="search" value="{{ request.GET.search }}">
+            <button type="submit" class="w-full px-4 py-2 border border-green-600 text-green-400 rounded-lg hover:bg-green-600/20 transition duration-200 font-medium">
+                Export as CSV
+            </button>
+        </form>
+    </div>
 
-    <input type="date" name="start" value="{{ start }}" class="p-2 border border-gray-300 rounded-lg" />
-    <input type="date" name="end" value="{{ end }}" class="p-2 border border-gray-300 rounded-lg" />
-
-
-    <input type="text" name="search" value="{{ search_query }}"
-           placeholder="Search message or source"
-           class="p-2 border border-gray-300 rounded-lg col-span-1 md:col-span-2" />
-
-
-    <button type="submit"
-            class="p-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition duration-200">
-      Apply Filters
-    </button>
-  </form>
-
-
-  <!-- Buttons -->
-  <div class="flex flex-col sm:flex-row sm:space-x-4 space-y-4 sm:space-y-0 mb-6">
-    <form method="get" action="{% url 'logs:export_logs_csv' %}">
-      <input type="hidden" name="level" value="{{ request.GET.level }}">
-      <input type="hidden" name="anomaly" value="{{ request.GET.anomaly }}">
-      <input type="hidden" name="start" value="{{ request.GET.start }}">
-      <input type="hidden" name="end" value="{{ request.GET.end }}">
-      <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
-        Export Filtered Logs as CSV
-      </button>
-    </form>
-
-
-    <a href="{% url 'logs:dashboard' %}" class="px-4 py-2 bg-indigo-600 text-white rounded-lg shadow hover:bg-indigo-700 transition">
-      ← Go to Dashboard
-    </a>
-
-
-    <a href="{% url 'logs:upload_logs' %}" class="px-4 py-2 bg-purple-600 text-white rounded-lg shadow hover:bg-purple-700 transition">
-      ⬆️ Upload Logs
-    </a>
-  </div>
-
-
-  <hr class="my-6">
-
-
-  <div id="log-list-container">
-    {% include "_log_list_partial.html" %}
-  </div>
+    <hr class="my-6 border-slate-700">
+    
+    <div id="log-list-container" class="relative">
+        <div id="loading-overlay" class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center rounded-lg z-10 hidden">
+            <svg class="animate-spin h-8 w-8 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+        </div>
+        {% include "_log_list_partial.html" %}
+    </div>
 </div>
 
-
 <script>
-  function fetchLogs(url) {
-    fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
-      .then(response => response.text())
-      .then(data => {
-        document.getElementById('log-list-container').innerHTML = data;
-      });
-  }
+    // This script requires the HTML above to have elements with these specific IDs
+    const filterForm = document.getElementById('filter-form');
+    const exportForm = document.getElementById('export-form');
+    const logContainer = document.getElementById('log-list-container');
+    const loadingOverlay = document.getElementById('loading-overlay');
 
-
-  // Handle pagination clicks dynamically
-  document.addEventListener('click', function(e) {
-    if (e.target.closest('#log-list-container a')) {
-      e.preventDefault();
-      fetchLogs(e.target.closest('#log-list-container a').href);
+    function fetchLogs(url) {
+        loadingOverlay.classList.remove('hidden');
+        fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(response => response.text())
+            .then(data => {
+                logContainer.innerHTML = data;
+            })
+            .finally(() => {
+                loadingOverlay.classList.add('hidden');
+            });
     }
-  });
 
+    function updateExportLinks(params) {
+        for (const [key, value] of params.entries()) {
+            let input = exportForm.querySelector(`input[name="${key}"]`);
+            if (input) {
+                input.value = value;
+            }
+        }
+    }
 
-  // Live search (debounced)
-  let searchInput = document.querySelector('input[name="search"]');
-  let debounceTimeout;
-  if (searchInput) {
-    searchInput.addEventListener('input', function() {
-      clearTimeout(debounceTimeout);
-      debounceTimeout = setTimeout(() => {
-        let form = searchInput.closest('form');
-        fetchLogs(form.action + '?' + new URLSearchParams(new FormData(form)));
-      }, 500);
+    filterForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(filterForm);
+        const params = new URLSearchParams(formData);
+        const url = filterForm.action + '?' + params.toString();
+        
+        history.pushState({ path: url }, '', url);
+        updateExportLinks(params);
+        fetchLogs(url);
     });
-  }
+
+    logContainer.addEventListener('click', function(e) {
+        const paginationLink = e.target.closest('.pagination-link');
+        if (paginationLink) {
+            e.preventDefault();
+            const url = paginationLink.href;
+            history.pushState({ path: url }, '', url);
+            fetchLogs(url);
+        }
+    });
+
+    window.addEventListener('popstate', function(e) {
+        if (e.state && e.state.path) {
+            fetchLogs(e.state.path);
+        }
+    });
 </script>
 {% endblock %}

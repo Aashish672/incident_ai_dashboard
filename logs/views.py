@@ -39,6 +39,7 @@ from .models import Notification
 
 from django.views.decorators.http import require_POST
 from django.contrib.auth.models import User
+from django.views.decorators.http import require_http_methods
 
 @login_required
 #@admin_required
@@ -404,12 +405,15 @@ def export_dashboard_pdf(request):
 
 
 @login_required
+@require_http_methods(["GET", "POST"])
 def notification_list(request):
-    notifications=request.user.notifications.order_by('-created_at')
+    notifications = request.user.notifications.filter(is_read=False).order_by('-created_at')
 
-    notifications.update(is_read=True)
-
-    return render(request,'notifications.html',{'notifications':notifications})
+    if request.method == "POST":
+        notifications.update(is_read=True)
+        # Optional: Redirect after POST to avoid resubmitting on refresh
+        #return redirect('logs:notification_list')
+    return render(request, 'notifications.html', {'notifications': notifications})
 
 @login_required
 @require_POST
