@@ -96,4 +96,3 @@ urlpatterns = [
     #path('', lambda request: redirect('upload_logs')),  # This conflicts with the above line
 
 
-
