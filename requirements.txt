@@ -7,6 +7,8 @@ channels>=4.0
 pandas>=2.0
 numpy>=1.24
 scikit-learn>=1.4
+matplotlib
+seaborn
 
 # Redis (for optional async messaging or Celery if re-enabled)
 # channels-redis>=4.1
