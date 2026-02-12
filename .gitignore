@@ -1,5 +1,34 @@
+# Python
 venv/
 __pycache__/
 *.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
 *.sqlite3
+
+# Environment
 .env
+
+# Node
+node_modules/
+package-lock.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Django
+staticfiles/
+media/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+.dockerignore

@@ -311,24 +311,23 @@ new Chart(pieCtx, {
     a.click();
   }
 
-  // WebSocket
-  const socket = new WebSocket("ws://" + window.location.hostname + ":8000/ws/logs/");
+  // WebSocket — dynamic protocol for dev (ws://) and prod (wss://)
+  const wsProtocol = window.location.protocol === "https:" ? "wss://" : "ws://";
+  const socket = new WebSocket(wsProtocol + window.location.host + "/ws/logs/");
   socket.onmessage = function(e) {
     const data = JSON.parse(e.data);
     const container = document.getElementById("realtime-logs");
     const logCard = `
-      <div class="border p-2 mb-2 rounded bg-red-100 shadow">
-        <strong>${data.level}</strong> — ${data.message} <br>
-        <small>${data.timestamp}</small>
+      <div class="p-4 rounded-lg shadow-lg border-l-4 border-red-500 bg-slate-800 hover:bg-red-500/10 transition-all duration-300">
+        <div class="flex justify-between items-start mb-2">
+          <p class="text-xs font-mono text-slate-400">${data.timestamp}</p>
+          <span class="text-xs px-2.5 py-1 rounded-full font-bold uppercase bg-red-500/20 text-red-400">${data.level}</span>
+        </div>
+        <p class="text-gray-200 font-medium">${data.message}</p>
+        <span class="inline-block mt-3 bg-rose-500/20 text-rose-400 text-xs px-2 py-0.5 rounded-full font-semibold">⚡ Anomaly Detected</span>
       </div>`;
-    container.innerHTML = logCard + container.innerHTML;
-  
-  }
-  function prepareChartsForPDF() {
-  const chartCanvas = document.getElementById('logChart');
-  const chartImage = chartCanvas.toDataURL('image/png');
-  document.getElementById('chartImage').value = chartImage;
-}
+    container.insertAdjacentHTML('afterbegin', logCard);
+  };
 
 </script>
 {% endblock %}

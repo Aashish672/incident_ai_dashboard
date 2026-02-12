@@ -12,6 +12,7 @@
     overflow: hidden;
     isolation: isolate;
   }
+
   .gradient-bg::before {
     content: '';
     position: absolute;
@@ -24,10 +25,22 @@
     z-index: 0;
     filter: blur(60px);
   }
+
   @keyframes pulse-glow {
-    0% { transform: scale(1) rotate(0deg); opacity: 0.2; }
-    50% { transform: scale(1.2) rotate(60deg); opacity: 0.3; }
-    100% { transform: scale(1) rotate(0deg); opacity: 0.2; }
+    0% {
+      transform: scale(1) rotate(0deg);
+      opacity: 0.2;
+    }
+
+    50% {
+      transform: scale(1.2) rotate(60deg);
+      opacity: 0.3;
+    }
+
+    100% {
+      transform: scale(1) rotate(0deg);
+      opacity: 0.2;
+    }
   }
 </style>
 {% endblock %}
@@ -45,39 +58,59 @@
           <span class="block text-blue-400">Intelligence Platform</span>
         </h1>
         <p class="text-lg sm:text-xl text-gray-300 mb-10">
-          <strong class="text-white">Incident AI</strong> provides a single pane of glass for real-time monitoring, anomaly detection, and log analysis. Empower your teams to resolve issues before they impact your users.
+          <strong class="text-white">Incident AI</strong> provides a single pane of glass for real-time monitoring,
+          anomaly detection, and log analysis. Empower your teams to resolve issues before they impact your users.
         </p>
 
         <div class="flex flex-col sm:flex-row gap-5 justify-center lg:justify-start">
           {% if not user.is_authenticated %}
-            <a href="{% url 'register' %}" class="inline-block bg-blue-600 hover:bg-blue-700 shadow-lg hover:shadow-blue-500/40 transition-all duration-300 text-white px-8 py-3 rounded-lg font-semibold text-center transform hover:scale-105">
-              Get Started for Free
-            </a>
-            <a href="{% url 'login' %}" class="inline-block bg-slate-700/80 hover:bg-slate-600 transition-colors duration-300 text-white px-8 py-3 rounded-lg font-semibold text-center whitespace-nowrap">
-              Login
-            </a>
+          <a href="{% url 'register' %}"
+            class="inline-block bg-blue-600 hover:bg-blue-700 shadow-lg hover:shadow-blue-500/40 transition-all duration-300 text-white px-8 py-3 rounded-lg font-semibold text-center transform hover:scale-105">
+            Get Started for Free
+          </a>
+          <a href="{% url 'login' %}"
+            class="inline-block bg-slate-700/80 hover:bg-slate-600 transition-colors duration-300 text-white px-8 py-3 rounded-lg font-semibold text-center whitespace-nowrap">
+            Login
+          </a>
           {% else %}
-            <a href="{% url 'logs:dashboard' %}" class="inline-block bg-blue-600 hover:bg-blue-700 shadow-lg hover:shadow-blue-500/40 transition-all duration-300 text-white px-8 py-3 rounded-lg font-semibold transform hover:scale-105 text-center whitespace-nowrap">
-              Go to Your Dashboard
-            </a>
+          <a href="{% url 'logs:dashboard' %}"
+            class="inline-block bg-blue-600 hover:bg-blue-700 shadow-lg hover:shadow-blue-500/40 transition-all duration-300 text-white px-8 py-3 rounded-lg font-semibold transform hover:scale-105 text-center whitespace-nowrap">
+            Go to Your Dashboard
+          </a>
           {% endif %}
         </div>
       </div>
 
       <!-- Image Preview -->
-      <div class="bg-slate-800/50 border border-blue-500/20 rounded-xl shadow-2xl shadow-blue-900/30 p-3 backdrop-filter backdrop-blur-sm">
-        <img src="{% static 'img/image.png' %}" alt="Dashboard Preview" class="rounded-lg w-full object-cover" loading="lazy" />
+      <div
+        class="bg-slate-800/50 border border-blue-500/20 rounded-xl shadow-2xl shadow-blue-900/30 p-3 backdrop-filter backdrop-blur-sm">
+        <img src="{% static 'img/image.png' %}" alt="Dashboard Preview" class="rounded-lg w-full object-cover"
+          loading="lazy" />
       </div>
     </div>
   </div>
 </section>
 
-<!-- Trusted Teams Section -->
+<!-- Platform Stats -->
 <section class="bg-slate-800 py-16">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-    <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider select-none">Trusted by the most innovative teams</h3>
-    <div class="mt-8 grid grid-cols-2 gap-8 md:grid-cols-4 lg:grid-cols-5 items-center">
-      <!-- Logos could go here if available, empty for now -->
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+      <div>
+        <p class="text-3xl font-extrabold text-blue-400">AI-Powered</p>
+        <p class="mt-2 text-sm text-gray-400">Isolation Forest Detection</p>
+      </div>
+      <div>
+        <p class="text-3xl font-extrabold text-blue-400">Real-Time</p>
+        <p class="mt-2 text-sm text-gray-400">WebSocket Alerts</p>
+      </div>
+      <div>
+        <p class="text-3xl font-extrabold text-blue-400">REST API</p>
+        <p class="mt-2 text-sm text-gray-400">Swagger/OpenAPI Docs</p>
+      </div>
+      <div>
+        <p class="text-3xl font-extrabold text-blue-400">Docker Ready</p>
+        <p class="mt-2 text-sm text-gray-400">One-Click Deployment</p>
+      </div>
     </div>
   </div>
 </section>
@@ -91,17 +124,23 @@
     </div>
 
     <div class="mt-16 grid gap-8 sm:grid-cols-2 lg:grid-cols-3 max-w-5xl mx-auto">
-      <div class="p-8 bg-slate-800/50 rounded-xl border border-slate-700 shadow-sm hover:shadow-blue-400/50 transition-shadow duration-300">
+      <div
+        class="p-8 bg-slate-800/50 rounded-xl border border-slate-700 shadow-sm hover:shadow-blue-400/50 transition-shadow duration-300">
         <h3 class="mt-4 text-xl font-bold text-white select-none">Log Aggregation</h3>
-        <p class="mt-2 text-base text-gray-400">Monitor logs from all your apps, services, and infrastructure in one centralized, searchable place.</p>
+        <p class="mt-2 text-base text-gray-400">Monitor logs from all your apps, services, and infrastructure in one
+          centralized, searchable place.</p>
       </div>
-      <div class="p-8 bg-slate-800/50 rounded-xl border border-slate-700 shadow-sm hover:shadow-blue-400/50 transition-shadow duration-300">
+      <div
+        class="p-8 bg-slate-800/50 rounded-xl border border-slate-700 shadow-sm hover:shadow-blue-400/50 transition-shadow duration-300">
         <h3 class="mt-4 text-xl font-bold text-white select-none">Real-Time Anomaly Detection</h3>
-        <p class="mt-2 text-base text-gray-400">Our AI model automatically detects unusual patterns and potential issues before they escalate.</p>
+        <p class="mt-2 text-base text-gray-400">Our AI model automatically detects unusual patterns and potential issues
+          before they escalate.</p>
       </div>
-      <div class="p-8 bg-slate-800/50 rounded-xl border border-slate-700 shadow-sm hover:shadow-blue-400/50 transition-shadow duration-300">
+      <div
+        class="p-8 bg-slate-800/50 rounded-xl border border-slate-700 shadow-sm hover:shadow-blue-400/50 transition-shadow duration-300">
         <h3 class="mt-4 text-xl font-bold text-white select-none">Intelligent Alerting</h3>
-        <p class="mt-2 text-base text-gray-400">Get critical incident alerts via Email, Slack, or PagerDuty. Reduce noise with customizable rules.</p>
+        <p class="mt-2 text-base text-gray-400">Get critical incident alerts via Email, Slack, or PagerDuty. Reduce
+          noise with customizable rules.</p>
       </div>
     </div>
   </div>
@@ -113,8 +152,10 @@
     <h2 class="text-3xl font-extrabold text-white sm:text-4xl select-none">
       <span class="block">Ready to Take Control of Your Incidents?</span>
     </h2>
-    <p class="mt-4 text-lg leading-6 text-blue-100">Stop firefighting and start preventing. Sign up today and get observability superpowers.</p>
-    <a href="{% url 'register' %}" class="mt-8 inline-flex items-center justify-center px-8 py-3 border border-transparent rounded-md shadow-lg text-base font-medium text-blue-600 bg-white hover:bg-blue-50 transition-colors duration-300 select-none">
+    <p class="mt-4 text-lg leading-6 text-blue-100">Stop firefighting and start preventing. Sign up today and get
+      observability superpowers.</p>
+    <a href="{% url 'register' %}"
+      class="mt-8 inline-flex items-center justify-center px-8 py-3 border border-transparent rounded-md shadow-lg text-base font-medium text-blue-600 bg-white hover:bg-blue-50 transition-colors duration-300 select-none">
       Sign Up for Free
     </a>
   </div>

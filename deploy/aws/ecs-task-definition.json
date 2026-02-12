@@ -1,0 +1,138 @@
+{
+    "family": "incident-ai-dashboard",
+    "networkMode": "awsvpc",
+    "requiresCompatibilities": [
+        "FARGATE"
+    ],
+    "cpu": "512",
+    "memory": "1024",
+    "executionRoleArn": "arn:aws:iam::YOUR_ACCOUNT_ID:role/ecsTaskExecutionRole",
+    "taskRoleArn": "arn:aws:iam::YOUR_ACCOUNT_ID:role/ecsTaskRole",
+    "containerDefinitions": [
+        {
+            "name": "web",
+            "image": "YOUR_ECR_URI/incident-ai-dashboard:latest",
+            "essential": true,
+            "portMappings": [
+                {
+                    "containerPort": 8000,
+                    "protocol": "tcp"
+                }
+            ],
+            "environment": [
+                {
+                    "name": "DEBUG",
+                    "value": "False"
+                },
+                {
+                    "name": "ALLOWED_HOSTS",
+                    "value": "*"
+                }
+            ],
+            "secrets": [
+                {
+                    "name": "SECRET_KEY",
+                    "valueFrom": "arn:aws:ssm:YOUR_REGION:YOUR_ACCOUNT_ID:parameter/incident-ai/SECRET_KEY"
+                },
+                {
+                    "name": "DB_NAME",
+                    "valueFrom": "arn:aws:ssm:YOUR_REGION:YOUR_ACCOUNT_ID:parameter/incident-ai/DB_NAME"
+                },
+                {
+                    "name": "DB_USER",
+                    "valueFrom": "arn:aws:ssm:YOUR_REGION:YOUR_ACCOUNT_ID:parameter/incident-ai/DB_USER"
+                },
+                {
+                    "name": "DB_PASSWORD",
+                    "valueFrom": "arn:aws:ssm:YOUR_REGION:YOUR_ACCOUNT_ID:parameter/incident-ai/DB_PASSWORD"
+                },
+                {
+                    "name": "DB_HOST",
+                    "valueFrom": "arn:aws:ssm:YOUR_REGION:YOUR_ACCOUNT_ID:parameter/incident-ai/DB_HOST"
+                },
+                {
+                    "name": "REDIS_URL",
+                    "valueFrom": "arn:aws:ssm:YOUR_REGION:YOUR_ACCOUNT_ID:parameter/incident-ai/REDIS_URL"
+                },
+                {
+                    "name": "EMAIL_HOST_USER",
+                    "valueFrom": "arn:aws:ssm:YOUR_REGION:YOUR_ACCOUNT_ID:parameter/incident-ai/EMAIL_HOST_USER"
+                },
+                {
+                    "name": "EMAIL_HOST_PASSWORD",
+                    "valueFrom": "arn:aws:ssm:YOUR_REGION:YOUR_ACCOUNT_ID:parameter/incident-ai/EMAIL_HOST_PASSWORD"
+                }
+            ],
+            "healthCheck": {
+                "command": [
+                    "CMD-SHELL",
+                    "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health/')\" || exit 1"
+                ],
+                "interval": 30,
+                "timeout": 10,
+                "retries": 3,
+                "startPeriod": 60
+            },
+            "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                    "awslogs-group": "/ecs/incident-ai-dashboard",
+                    "awslogs-region": "YOUR_REGION",
+                    "awslogs-stream-prefix": "web"
+                }
+            }
+        },
+        {
+            "name": "celery-worker",
+            "image": "YOUR_ECR_URI/incident-ai-dashboard:latest",
+            "essential": false,
+            "command": [
+                "celery",
+                "-A",
+                "incident_ai",
+                "worker",
+                "--loglevel=info"
+            ],
+            "environment": [
+                {
+                    "name": "DEBUG",
+                    "value": "False"
+                }
+            ],
+            "secrets": [
+                {
+                    "name": "SECRET_KEY",
+                    "valueFrom": "arn:aws:ssm:YOUR_REGION:YOUR_ACCOUNT_ID:parameter/incident-ai/SECRET_KEY"
+                },
+                {
+                    "name": "DB_NAME",
+                    "valueFrom": "arn:aws:ssm:YOUR_REGION:YOUR_ACCOUNT_ID:parameter/incident-ai/DB_NAME"
+                },
+                {
+                    "name": "DB_USER",
+                    "valueFrom": "arn:aws:ssm:YOUR_REGION:YOUR_ACCOUNT_ID:parameter/incident-ai/DB_USER"
+                },
+                {
+                    "name": "DB_PASSWORD",
+                    "valueFrom": "arn:aws:ssm:YOUR_REGION:YOUR_ACCOUNT_ID:parameter/incident-ai/DB_PASSWORD"
+                },
+                {
+                    "name": "DB_HOST",
+                    "valueFrom": "arn:aws:ssm:YOUR_REGION:YOUR_ACCOUNT_ID:parameter/incident-ai/DB_HOST"
+                },
+                {
+                    "name": "REDIS_URL",
+                    "valueFrom": "arn:aws:ssm:YOUR_REGION:YOUR_ACCOUNT_ID:parameter/incident-ai/REDIS_URL"
+                }
+            ],
+            "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                    "awslogs-group": "/ecs/incident-ai-dashboard",
+                    "awslogs-region": "YOUR_REGION",
+                    "awslogs-stream-prefix": "celery"
+                }
+            }
+        }
+    ]
+}
