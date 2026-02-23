@@ -39,10 +39,7 @@ DEBUG = os.getenv("DEBUG", "False") == "True"
 
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost").split(",")
 
-CSRF_TRUSTED_ORIGINS = [
-    "https://incident-ai-dashboard.onrender.com",
-    "https://www.mycustomdomain.com",
-]
+CSRF_TRUSTED_ORIGINS = os.getenv("CSRF_TRUSTED_ORIGINS", "http://localhost:8000,http://127.0.0.1:8000").split(",")
 
 CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_SECURE = True
