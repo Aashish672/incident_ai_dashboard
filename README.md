@@ -143,17 +143,6 @@ python manage.py shell
 
 _All charts are exportable as image (PNG) for reporting purposes._
 
----
-
-## ✅ Roadmap (Week 1 Goals)
-
-- [x] CSV Upload & Parsing
-- [x] ML Anomaly Detection
-- [x] Email Alerts on Anomaly
-- [x] Dashboard Visualizations
-- [x] Real-Time WebSocket Integration
-- [ ] (Optional) Celery for Background Tasks
-- [ ] (Optional) Cron/Task Scheduler Integration
 
 ---
 
